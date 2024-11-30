@@ -18,7 +18,7 @@ namespace ODataApiGen.Models
 
       Referentials = xElement.Descendants()
               .Where(a => a.Name.LocalName == "ReferentialConstraint")
-              .Select(key => new ReferentialConstraint() {
+              .Select(key => new ReferentialConstraint {
                   Property = key.Attribute("Property")?.Value,
                   ReferencedProperty = key.Attribute("ReferencedProperty")?.Value
               })
@@ -29,43 +29,43 @@ namespace ODataApiGen.Models
       ToRole = xElement.Attribute("ToRole")?.Value;
       FromRole = xElement.Attribute("FromRole")?.Value;
     }
-    public string NamespaceQualifiedName { get; set; }
-    public string Partner { get; set; }
+    public string? NamespaceQualifiedName { get; set; }
+    public string? Partner { get; set; }
     public bool ContainsTarget { get; set; }
     public IEnumerable<ReferentialConstraint> Referentials { get; set; }
-    public string Relationship { get; set; }
-    public string ToRole { get; set; }
-    public string FromRole { get; set; }
-    public Association Association { get; set; }
+    public string? Relationship { get; set; }
+    public string? ToRole { get; set; }
+    public string? FromRole { get; set; }
+    public Association? Association { get; set; }
     public string FromEntityType
     {
       get
       {
-        return (this.Association != null) ?
-            this.Association.Ends.FirstOrDefault(e => e.Role == this.FromRole).Type : 
-            String.Empty;
+        return Association != null ?
+            Association.Ends.First(e => e.Role == FromRole).Type : 
+            "";
       }
     }
     public string ToEntityType 
     {
       get
       {
-        return (this.Association != null) ?
-            this.Association.Ends.FirstOrDefault(e => e.Role == this.ToRole).Type : 
-            String.Empty;
+        return Association != null ?
+            Association.Ends.First(e => e.Role == ToRole).Type : 
+            "";
       }
     }
     public bool Many 
     {
       get
       {
-        return (this.Association != null) && this.Association.Ends.FirstOrDefault(e => e.Role == this.ToRole).Multiplicity == "*";
+        return Association != null && Association.Ends.First(e => e.Role == ToRole).Multiplicity == "*";
       }
     }
   }
     public class ReferentialConstraint
     {
-        public string Property { get; set; }
-        public string ReferencedProperty { get; set; }
+        public string? Property { get; set; }
+        public string? ReferencedProperty { get; set; }
     }
 }

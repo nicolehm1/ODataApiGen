@@ -6,15 +6,15 @@ namespace ODataApiGen.Models
         public Schema Schema {get; private set;}
         public Association(XElement element, Schema schema) : base(element)
         {
-            this.Schema = schema;
+            Schema = schema;
             Name = element.Attribute("Name")?.Value;
             Ends = element.Descendants().Where(a => a.Name.LocalName == "End")
                 .Select(end => new AssociationEnd(end, this)).ToList();
         }
 
         public List<AssociationEnd> Ends { get; private set; }
-        public string Namespace => this.Schema.Namespace;
+        public string Namespace => Schema.Namespace;
         public string Name { get; private set; }
-        public string NamespaceQualifiedName { get { return $"{this.Namespace}.{this.Name}"; } }
+        public string NamespaceQualifiedName { get { return $"{Namespace}.{Name}"; } }
     }
 }

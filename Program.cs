@@ -1,17 +1,18 @@
-﻿using ODataApiGen.Models;
+﻿using System.Xml.Linq;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ODataApiGen.Abstracts;
+using ODataApiGen.Models;
 
 namespace ODataApiGen
 {
   class Program
   {
-    public static ILoggerFactory? LoggerFactory { get; private set; }
-    public static ILogger? Logger { get; private set; }
-    public static IConfiguration? Configuration { get; set; }
-    public static Metadata? Metadata { get; set; }
-    public static Package? Package { get; set; }
+    public static ILoggerFactory LoggerFactory { get; private set; } = null!;
+    public static ILogger Logger { get; private set; } =null!;
+    public static IConfiguration Configuration { get; set; } = null!;
+    public static Metadata Metadata { get; set; } = null!;
+    public static Package Package { get; set; } = null!;
 
     static void Main(string[] args)
     {
@@ -27,7 +28,7 @@ namespace ODataApiGen
       var builder = new ConfigurationBuilder()
           .SetBasePath(Directory.GetCurrentDirectory())
           .AddJsonFile("application.json")
-          .AddCommandLine(args, new Dictionary<string, string>() {
+          .AddCommandLine(args, new Dictionary<string, string> {
             {"-Name", "Name"},
             {"-Metadata", "Metadata"},
             {"-Purge", "Purge"},
@@ -37,21 +38,21 @@ namespace ODataApiGen
           });
       Configuration = builder.Build();
 
-      var name = Configuration.GetValue<string>("Name");
-      var output = Configuration.GetValue<string>("Output");
-      var type = Configuration.GetValue<string>("Type");
+      var name = Configuration.GetValue<string>("Name")!;
+      var output = Configuration.GetValue<string>("Output")!;
+      var type = Configuration.GetValue<string>("Type")!;
       output = $"{output}{Path.DirectorySeparatorChar}{name.Dasherize()}";
       var directories = new DirectoryManager(output);
       var renderer = new Renderer(type, output);
 
-      var metadata = Configuration.GetValue<string>("Metadata");
+      var metadata = Configuration.GetValue<string>("Metadata")!;
       var serviceRootUrl = metadata.StartsWith("http") ? metadata.TrimEnd("$metadata".ToCharArray()) : "";
-      Metadata = new Metadata(System.Xml.Linq.XDocument.Load(metadata));
+      Metadata = new Metadata(XDocument.Load(metadata));
 
       var purge = Configuration.GetValue<bool>("Purge");
       directories.PrepareOutput(purge);
 
-      var options = new ApiOptions()
+      var options = new ApiOptions
       {
         Name = name,
         ServiceRootUrl = serviceRootUrl,

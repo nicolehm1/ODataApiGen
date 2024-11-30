@@ -8,10 +8,10 @@ namespace ODataApiGen.Models
         private static ILogger Logger {get;} = Program.LoggerFactory.CreateLogger<EntityContainer>();
         public Schema Schema { get; private set; }
         public string Name { get; private set; }
-        public string Namespace => this.Schema.Namespace; 
-        public string Alias => this.Schema.Alias; 
-        public string NamespaceQualifiedName { get { return $"{this.Namespace}.{this.Name}"; } }
-        public string AliasQualifiedName { get { return $"{this.Alias}.{this.Name}"; } }
+        public string Namespace => Schema.Namespace; 
+        public string Alias => Schema.Alias; 
+        public string NamespaceQualifiedName { get { return $"{Namespace}.{Name}"; } }
+        public string AliasQualifiedName { get { return $"{Alias}.{Name}"; } }
         public IEnumerable<EntitySet> EntitySets { get; private set; }
         public IEnumerable<AssociationSet> AssociationSets { get; private set; }
         public IEnumerable<Singleton> Singletons { get; private set; }
@@ -94,17 +94,17 @@ namespace ODataApiGen.Models
         #endregion
         public EntityContainer(XElement element, Schema schema) : base(element)
         {
-            this.Schema = schema;
-            this.Name = element.Attribute("Name").Value;
-            this.EntitySets = EntityContainer.ReadEntitySets(element, this);
-            this.AssociationSets = EntityContainer.ReadAssociationSets(element, this);
-            this.Singletons = EntityContainer.ReadSingletons(element, this);
-            this.ActionImports = EntityContainer.ReadActionImports(element, this);
-            this.FunctionImports = EntityContainer.ReadFunctionImports(element, this);
+            Schema = schema;
+            Name = element.Attribute("Name").Value;
+            EntitySets = ReadEntitySets(element, this);
+            AssociationSets = ReadAssociationSets(element, this);
+            Singletons = ReadSingletons(element, this);
+            ActionImports = ReadActionImports(element, this);
+            FunctionImports = ReadFunctionImports(element, this);
         }
 
         public void ResolveActionImports(IEnumerable<Action> actions) {
-            this.UnboundActions = actions.Where(f => !f.IsBound);
+            UnboundActions = actions.Where(f => !f.IsBound);
             foreach (var eset in EntitySets) {
                 eset.ImportActions(ActionImports, actions);
             }
@@ -114,7 +114,7 @@ namespace ODataApiGen.Models
         }
 
         public void ResolveFunctionImports(IEnumerable<Function> functions) {
-            this.UnboundFunctions = functions.Where(f => !f.IsBound);
+            UnboundFunctions = functions.Where(f => !f.IsBound);
             foreach (var eset in EntitySets) {
                 eset.ImportFunctions(FunctionImports, functions);
             }

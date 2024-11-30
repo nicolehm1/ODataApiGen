@@ -28,8 +28,8 @@ namespace ODataApiGen.Models
     */
     public class Annotation
     {
-        protected dynamic Value;
-        public string Term => this.Value.Term;
+        protected readonly dynamic Value;
+        public string Term => Value.Term;
         public Annotation(object value)
         {
             Value = value;
@@ -65,28 +65,28 @@ namespace ODataApiGen.Models
         public virtual IDictionary<string, object> ToDictionary()
         {
             var result = new Dictionary<string, object>();
-            result.Add("term", this.Term);
+            result.Add("term", Term);
             try
             {
-                if (!result.ContainsKey("string") && !String.IsNullOrEmpty(this.Value.String))
-                    result.Add("string", this.Value.String);
+                if (!result.ContainsKey("string") && !String.IsNullOrEmpty(Value.String))
+                    result.Add("string", Value.String);
             }
             catch { }
             try
             {
-                if (!result.ContainsKey("bool") && !String.IsNullOrEmpty(this.Value.Bool))
-                    result.Add("bool", this.Value.Bool.ToLower() == "true");
+                if (!result.ContainsKey("bool") && !String.IsNullOrEmpty(Value.Bool))
+                    result.Add("bool", Value.Bool.ToLower() == "true");
             }
             catch { }
             try
             {
-                if (!result.ContainsKey("int") && !String.IsNullOrEmpty(this.Value.Int))
-                    result.Add("int", Convert.ToInt32(this.Value.Int));
+                if (!result.ContainsKey("int") && !String.IsNullOrEmpty(Value.Int))
+                    result.Add("int", Convert.ToInt32(Value.Int));
             }
             catch { }
             try
             {
-                var els = this.Value.Elements();
+                var els = Value.Elements();
                 if (!result.ContainsKey("values") && els.Count() > 1)
                     result.Add("values", ((IEnumerable<dynamic>)els).SelectMany(e => (IEnumerable<dynamic>)e.Elements()).Select(s => s.Value).ToList());
             }
@@ -100,7 +100,7 @@ namespace ODataApiGen.Models
 
     public class CoreDescriptionAnnotation : Annotation
     {
-        public string String => this.Value.String;
+        public string String => Value.String;
         public CoreDescriptionAnnotation(object value) : base(value)
         {
         }
@@ -108,14 +108,14 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("string"))
-                result.Add("string", this.String);
+                result.Add("string", String);
             return result;
         }
     }
 
     public class CoreOptimisticConcurrencyAnnotation : Annotation
     {
-        public IEnumerable<string> Properties => ((List<dynamic>)this.Value.Elements()).Select(ele => ele.Value as string);
+        public IEnumerable<string> Properties => ((List<dynamic>)Value.Elements()).Select(ele => ele.Value as string);
         public CoreOptimisticConcurrencyAnnotation(object value) : base(value)
         {
         }
@@ -123,13 +123,13 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("properties"))
-                result.Add("properties", this.Properties);
+                result.Add("properties", Properties);
             return result;
         }
     }
     public class CoreComputedAnnotation : Annotation
     {
-        public bool Bool => this.Value.Bool.ToLower() == "true";
+        public bool Bool => Value.Bool.ToLower() == "true";
         public CoreComputedAnnotation(object value) : base(value)
         {
         }
@@ -137,13 +137,13 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("bool"))
-                result.Add("bool", this.Bool);
+                result.Add("bool", Bool);
             return result;
         }
     }
     public class CoreImmutableAnnotation : Annotation
     {
-        public bool Bool => this.Value.Bool.ToLower() == "true";
+        public bool Bool => Value.Bool.ToLower() == "true";
         public CoreImmutableAnnotation(object value) : base(value)
         {
         }
@@ -151,13 +151,13 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("bool"))
-                result.Add("bool", this.Bool);
+                result.Add("bool", Bool);
             return result;
         }
     }
     public class CorePermissionsAnnotation : Annotation
     {
-        public IEnumerable<string> Permissions => ((List<dynamic>)this.Value.Elements()).Select(ele => ele.Value as string);
+        public IEnumerable<string> Permissions => ((List<dynamic>)Value.Elements()).Select(ele => ele.Value as string);
         public CorePermissionsAnnotation(object value) : base(value)
         {
         }
@@ -165,13 +165,13 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("permissions"))
-                result.Add("permissions", this.Permissions);
+                result.Add("permissions", Permissions);
             return result;
         }
     }
     public class CoreDereferenceableIDsAnnotation : Annotation
     {
-        public bool Bool => this.Value.Bool.ToLower() == "true";
+        public bool Bool => Value.Bool.ToLower() == "true";
         public CoreDereferenceableIDsAnnotation(object value) : base(value)
         {
         }
@@ -179,13 +179,13 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("bool"))
-                result.Add("bool", this.Bool);
+                result.Add("bool", Bool);
             return result;
         }
     }
     public class CoreConventionalIDsAnnotation : Annotation
     {
-        public bool Bool => this.Value.Bool.ToLower() == "true";
+        public bool Bool => Value.Bool.ToLower() == "true";
         public CoreConventionalIDsAnnotation(object value) : base(value)
         {
         }
@@ -193,13 +193,13 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("bool"))
-                result.Add("bool", this.Bool);
+                result.Add("bool", Bool);
             return result;
         }
     }
     public class CoreResourcePathAnnotation : Annotation
     {
-        public string String => this.Value.String;
+        public string String => Value.String;
         public CoreResourcePathAnnotation(object value) : base(value)
         {
         }
@@ -207,13 +207,13 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("string"))
-                result.Add("string", this.String);
+                result.Add("string", String);
             return result;
         }
     }
     public class MeasuresISOCurrencyAnnotation : Annotation
     {
-        public string String => this.Value.String;
+        public string String => Value.String;
         public MeasuresISOCurrencyAnnotation(object value) : base(value)
         {
         }
@@ -221,13 +221,13 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("string"))
-                result.Add("string", this.String);
+                result.Add("string", String);
             return result;
         }
     }
     public class MeasuresScaleAnnotation : Annotation
     {
-        public int Int => Convert.ToInt32(this.Value.Int);
+        public int Int => Convert.ToInt32(Value.Int);
         public MeasuresScaleAnnotation(object value) : base(value)
         {
         }
@@ -235,7 +235,7 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("int"))
-                result.Add("int", this.Int);
+                result.Add("int", Int);
             return result;
         }
     }
@@ -248,7 +248,7 @@ namespace ODataApiGen.Models
         public override IDictionary<string, object> ToDictionary()
         {
             var result = base.ToDictionary();
-            var els = this.Value.Elements();
+            var els = Value.Elements();
             if (!result.ContainsKey("values") && els != null)
                 result.Add("values", ((IEnumerable<dynamic>)els).SelectMany(e => (IEnumerable<dynamic>)e.Elements()).Select(s => s.Value).ToList());
             return result;
@@ -262,7 +262,7 @@ namespace ODataApiGen.Models
         public override IDictionary<string, object> ToDictionary()
         {
             var result = base.ToDictionary();
-            var els = this.Value.Elements();
+            var els = Value.Elements();
             if (!result.ContainsKey("values") && els != null)
                 result.Add("values", ((IEnumerable<dynamic>)els).Select(e => e.Value).ToList());
             return result;
@@ -276,7 +276,7 @@ namespace ODataApiGen.Models
         public override IDictionary<string, object> ToDictionary()
         {
             var result = base.ToDictionary();
-            var els = this.Value.Elements();
+            var els = Value.Elements();
             if (!result.ContainsKey("values") && els != null)
                 result.Add("values", ((IEnumerable<dynamic>)els).SelectMany(e => (IEnumerable<dynamic>)e.Elements()).Select(s => s.Value).ToList());
             return result;
@@ -285,7 +285,7 @@ namespace ODataApiGen.Models
 
     public class CapabilitiesBatchContinueOnErrorSupportedAnnotation : Annotation
     {
-        public bool Bool => this.Value.Bool.ToLower() == "true";
+        public bool Bool => Value.Bool.ToLower() == "true";
         public CapabilitiesBatchContinueOnErrorSupportedAnnotation(object value) : base(value)
         {
         }
@@ -293,13 +293,13 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("bool"))
-                result.Add("bool", this.Bool);
+                result.Add("bool", Bool);
             return result;
         }
     }
     public class CapabilitiesAsynchronousRequestsSupportedAnnotation : Annotation
     {
-        public bool Bool => this.Value.Bool.ToLower() == "true";
+        public bool Bool => Value.Bool.ToLower() == "true";
         public CapabilitiesAsynchronousRequestsSupportedAnnotation(object value) : base(value)
         {
         }
@@ -307,7 +307,7 @@ namespace ODataApiGen.Models
         {
             var result = base.ToDictionary();
             if (!result.ContainsKey("bool"))
-                result.Add("bool", this.Bool);
+                result.Add("bool", Bool);
             return result;
         }
     }
@@ -319,7 +319,7 @@ namespace ODataApiGen.Models
         public override IDictionary<string, object> ToDictionary()
         {
             var result = base.ToDictionary();
-            var els = this.Value.Elements();
+            var els = Value.Elements();
             if (!result.ContainsKey("values") && els != null)
                 result.Add("values", ((IEnumerable<dynamic>)els).SelectMany(e => (IEnumerable<dynamic>)e.Elements()).Select(s => s.Value).ToList());
             return result;
@@ -333,7 +333,7 @@ namespace ODataApiGen.Models
         public override IDictionary<string, object> ToDictionary()
         {
             var result = base.ToDictionary();
-            var els = this.Value.Elements();
+            var els = Value.Elements();
             if (!result.ContainsKey("values") && els != null)
                 result.Add("values", ((IEnumerable<dynamic>)els).SelectMany(e => (IEnumerable<dynamic>)e.Elements()).Select(s => s.Value).ToList());
             return result;
@@ -347,7 +347,7 @@ namespace ODataApiGen.Models
         public override IDictionary<string, object> ToDictionary()
         {
             var result = base.ToDictionary();
-            var els = this.Value.Elements();
+            var els = Value.Elements();
             if (!result.ContainsKey("values") && els != null)
                 result.Add("values", ((IEnumerable<dynamic>)els).SelectMany(e => (IEnumerable<dynamic>)e.Elements()).Select(s => s.Value).ToList());
             return result;

@@ -28,7 +28,7 @@ namespace ODataApiGen.Models
             {
                 var enT = new EnumType(xElement, schema);
                 enumList.Add(enT);
-                Logger.LogInformation($"Enum Type  '{enT.Namespace}.{enT.Name}' parsed");
+                Logger.LogInformation("Enum Type  \'{EnTNamespace}.{EnTName}\' parsed", enT.Namespace, enT.Name);
             }
             return enumList;
 
@@ -43,7 +43,7 @@ namespace ODataApiGen.Models
             {
                 var enT = new ComplexType(xElement, schema);
                 typeList.Add(enT);
-                Logger.LogInformation($"Complex Type '{enT.Namespace}.{enT.Name}' parsed");
+                Logger.LogInformation("Complex Type \'{EnTNamespace}.{EnTName}\' parsed", enT.Namespace, enT.Name);
             }
             return typeList;
         }
@@ -57,7 +57,7 @@ namespace ODataApiGen.Models
             {
                 var enT = new EntityType(xElement, schema);
                 typeList.Add(enT);
-                Logger.LogInformation($"Entity Type '{enT.Namespace}.{enT.Name}' parsed");
+                Logger.LogInformation("Entity Type \'{EnTNamespace}.{EnTName}\' parsed", enT.Namespace, enT.Name);
             }
             return typeList;
         }
@@ -71,7 +71,7 @@ namespace ODataApiGen.Models
             {
                 var asoc = new Association(xElement, schema);
                 assocList.Add(asoc);
-                Logger.LogInformation($"Association '{asoc.Namespace}.{asoc.Name}' parsed");
+                Logger.LogInformation("Association \'{AsocNamespace}.{AsocName}\' parsed", asoc.Namespace, asoc.Name);
             }
             return assocList;
         }
@@ -85,7 +85,7 @@ namespace ODataApiGen.Models
             {
                 var tCustomAction = new Action(xElement, schema);
                 customActionList.Add(tCustomAction);
-                Logger.LogInformation($"Action '{tCustomAction.Name}' parsed");
+                Logger.LogInformation("Action \'{Name}\' parsed", tCustomAction.Name);
             }
             return customActionList;
         }
@@ -99,7 +99,7 @@ namespace ODataApiGen.Models
             {
                 var tCustomFunction = new Function(xElement, schema);
                 customFunctionList.Add(tCustomFunction);
-                Logger.LogInformation($"Function '{tCustomFunction.Name}' parsed");
+                Logger.LogInformation("Function \'{Name}\' parsed", tCustomFunction.Name);
             }
             return customFunctionList;
         }
@@ -112,7 +112,7 @@ namespace ODataApiGen.Models
             {
                 var tCustomFunction = new EntityContainer(xElement, schema);
                 customFunctionList.Add(tCustomFunction);
-                Logger.LogInformation($"EntityContainer '{tCustomFunction.Name}' parsed");
+                Logger.LogInformation("EntityContainer \'{Name}\' parsed", tCustomFunction.Name);
             }
             return customFunctionList;
         }
@@ -127,7 +127,7 @@ namespace ODataApiGen.Models
                 annotations[target] = xElement.Descendants()
                     .Where(a => a.Name.LocalName == "Annotation")
                     .Select(annot => Annotation.Factory(annot)).ToList();
-                Logger.LogInformation($"Annotations '{target}' parsed");
+                Logger.LogInformation("Annotations \'{Target}\' parsed", target);
             }
             return annotations;
         }
@@ -135,19 +135,19 @@ namespace ODataApiGen.Models
         #endregion
         public Schema(XElement xElement) 
         {
-            this.Namespace = xElement.Attribute("Namespace").Value;
-            this.Alias = xElement.Attribute("Alias")?.Value;
-            this.EnumTypes = Schema.ReadEnums(xElement, this);
-            this.ComplexTypes = Schema.ReadComplexTypes(xElement, this);
-            this.EntityTypes = Schema.ReadEntityTypes(xElement, this);
-            this.Associations = Schema.ReadAssociations(xElement, this);
-            this.Actions = Schema.ReadActions(xElement, this);
-            this.Functions = Schema.ReadFunctions(xElement, this);
-            this.EntityContainers = Schema.ReadEntityContainer(xElement, this);
-            this.Annotations = Schema.ReadAnnotations(xElement, this);
+            Namespace = xElement.Attribute("Namespace").Value;
+            Alias = xElement.Attribute("Alias")?.Value;
+            EnumTypes = ReadEnums(xElement, this);
+            ComplexTypes = ReadComplexTypes(xElement, this);
+            EntityTypes = ReadEntityTypes(xElement, this);
+            Associations = ReadAssociations(xElement, this);
+            Actions = ReadActions(xElement, this);
+            Functions = ReadFunctions(xElement, this);
+            EntityContainers = ReadEntityContainer(xElement, this);
+            Annotations = ReadAnnotations(xElement, this);
         }
 
-        public void ResolveFunctions(IEnumerable<Function> functions) {
+        public void ResolveFunctions(Function[] functions) {
             foreach (var entityType in EntityTypes) {
                 entityType.AddFunctions(functions);
             }
@@ -155,7 +155,7 @@ namespace ODataApiGen.Models
                 container.ResolveFunctionImports(functions);
             }
         }
-        public void ResolveActions(IEnumerable<Action> actions) {
+        public void ResolveActions(Action[] actions) {
             foreach (var entityType in EntityTypes) {
                 entityType.AddActions(actions);
             }
@@ -163,17 +163,15 @@ namespace ODataApiGen.Models
                 container.ResolveActionImports(actions);
             }
         }
-        public void ResolveAssociations(IEnumerable<Association> associations) {
+        public void ResolveAssociations(Association[] associations) {
             foreach (var entityType in EntityTypes) {
                 entityType.AddAssociations(associations);
             }
         }
         public void ResolveAnnotations(IEnumerable<KeyValuePair<string, List<Annotation>>> annots) {
             foreach (var annot in annots) {
-                var container = this.EntityContainers.Where(c => c.NamespaceQualifiedName == annot.Key).FirstOrDefault();
-                if (container != null) {
-                    container.Annotations.AddRange(annot.Value);
-                }
+                var container = EntityContainers.Where(c => c.NamespaceQualifiedName == annot.Key).FirstOrDefault();
+                container?.Annotations.AddRange(annot.Value);
             }
         }
     }

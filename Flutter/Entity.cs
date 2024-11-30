@@ -1,17 +1,17 @@
 using DotLiquid;
-using ODataApiGen.Models;
 using ODataApiGen.Abstracts;
+using ODataApiGen.Models;
 
 namespace ODataApiGen.Flutter
 {
     public class EntityProperty : ILiquidizable
   {
-    protected Models.Property Value { get; set; }
-    protected Flutter.StructuredType Structured { get; set; }
-    public EntityProperty(ODataApiGen.Models.Property prop, Flutter.StructuredType structured)
+    protected Property Value { get; set; }
+    protected StructuredType Structured { get; set; }
+    public EntityProperty(Property prop, StructuredType structured)
     {
-      this.Structured = structured;
-      this.Value = prop;
+      Structured = structured;
+      Value = prop;
     }
 
     public string Name
@@ -31,27 +31,26 @@ namespace ODataApiGen.Flutter
     {
       get
       {
-        var pkg = Program.Package as Flutter.Package;
+        var pkg = Program.Package as Package;
         var nullable = Value.Nullable;
         var type = "dynamic";
-        if (this.Value.IsEnumType)
+        if (Value.IsEnumType)
         {
-          var e = pkg.FindEnum(this.Value.Type);
+          var e = pkg.FindEnum(Value.Type);
           type = e.ImportedName;
         }
         else if (Value.IsEdmType)
         {
-          type = this.Structured.ToTypescriptType(Value.Type);
+          type = Structured.ToTypescriptType(Value.Type);
           type = Value.IsCollection ? $"List<{type}>" : type;
         }
         else if (Value.IsEntityType || Value.IsComplexType)
         {
-          var entity = pkg.FindEntity(this.Value.Type);
+          var entity = pkg.FindEntity(Value.Type);
           type = Value.IsCollection ? $"List<{entity.ImportedName}>" : entity.ImportedName;
         }
-        else if (Value is NavigationProperty)
+        else if (Value is NavigationProperty nav)
         {
-          var nav = Value as NavigationProperty;
           var entity = pkg.FindEntity(nav.ToEntityType);
           type = nav.Many ? $"List<{entity.ImportedName}>" : entity.ImportedName;
         }
@@ -64,39 +63,38 @@ namespace ODataApiGen.Flutter
     {
       return new
       {
-        Name = this.Name,
-        Type = this.Type
+        Name, Type
       };
     }
-    public bool IsGeo => this.Value.Type.StartsWith("Edm.Geography") || this.Value.Type.StartsWith("Edm.Geometry");
+    public bool IsGeo => Value.Type.StartsWith("Edm.Geography") || Value.Type.StartsWith("Edm.Geometry");
   }
   public class Entity : StructuredType
   {
     public Entity(Models.StructuredType type, ApiOptions options) : base(type, options) { }
 
-    public override string FileName => this.EdmStructuredType.Name.Dasherize() +
-    ((this.EdmStructuredType is ComplexType) ? ".complex" : ".entity");
-    public override string Name => Utils.ToDartName(this.EdmStructuredType.Name, DartElement.Class);
+    public override string FileName => EdmStructuredType.Name.Dasherize() +
+    (EdmStructuredType is ComplexType ? ".complex" : ".entity");
+    public override string Name => Utils.ToDartName(EdmStructuredType.Name, DartElement.Class);
     // Exports
 
-    public IEnumerable<Flutter.EntityProperty> Properties
+    public IEnumerable<EntityProperty> Properties
     {
       get
       {
-        var props = this.EdmStructuredType.Properties.ToList();
-        if (this.EdmStructuredType is EntityType)
-          props.AddRange((this.EdmStructuredType as EntityType).NavigationProperties);
-        return props.Select(prop => new Flutter.EntityProperty(prop, this));
+        var props = EdmStructuredType.Properties.ToList();
+        if (EdmStructuredType is EntityType type)
+          props.AddRange(type.NavigationProperties);
+        return props.Select(prop => new EntityProperty(prop, this));
       }
     }
-    public IEnumerable<Flutter.EntityProperty> GeoProperties => this.Properties.Where(p => p.IsGeo);
-    public bool HasGeoFields => this.Options.GeoJson && this.GeoProperties.Count() > 0;
+    public IEnumerable<EntityProperty> GeoProperties => Properties.Where(p => p.IsGeo);
+    public bool HasGeoFields => Options.GeoJson && GeoProperties.Count() > 0;
     public override object ToLiquid()
     {
       return new
       {
-        Name = this.ImportedName,
-        EntityType = this.EdmStructuredType.NamespaceQualifiedName
+        Name = ImportedName,
+        EntityType = EdmStructuredType.NamespaceQualifiedName
       };
     }
   }

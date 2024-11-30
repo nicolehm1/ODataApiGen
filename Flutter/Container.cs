@@ -1,46 +1,47 @@
-using ODataApiGen.Models;
-using ODataApiGen.Abstracts;
 using System.Text.Json;
+using DotLiquid;
+using ODataApiGen.Abstracts;
+using ODataApiGen.Models;
 
 namespace ODataApiGen.Flutter
 {
-    public class Container : FlutterRenderable, DotLiquid.ILiquidizable
+    public class Container : FlutterRenderable, ILiquidizable
   {
-    public Models.EntityContainer EdmEntityContainer { get; private set; }
-    public Flutter.ServiceContainer Service { get; private set; }
-    public ICollection<Flutter.Service> Services { get; } = new List<Flutter.Service>();
-    public ICollection<Flutter.EntitySetConfig> EntitySetConfigs { get; } = new List<Flutter.EntitySetConfig>();
+    public EntityContainer EdmEntityContainer { get; private set; }
+    public ServiceContainer Service { get; private set; }
+    public ICollection<Service> Services { get; } = new List<Service>();
+    public ICollection<EntitySetConfig> EntitySetConfigs { get; } = new List<EntitySetConfig>();
     public Container(EntityContainer container, ApiOptions options) : base(options)
     {
-      this.EdmEntityContainer = container;
-      this.Service = new Flutter.ServiceContainer(this, options);
+      EdmEntityContainer = container;
+      Service = new ServiceContainer(this, options);
       foreach (var eset in container.EntitySets)
       {
-        Service service = new Flutter.ServiceEntitySet(eset, options);
-        this.Services.Add(service);
-        var config = new Flutter.EntitySetConfig(service, options);
-        this.EntitySetConfigs.Add(config);
+        Service service = new ServiceEntitySet(eset, options);
+        Services.Add(service);
+        var config = new EntitySetConfig(service, options);
+        EntitySetConfigs.Add(config);
       }
       foreach (var s in container.Singletons)
       {
-        var service = new Flutter.ServiceSingleton(s, options);
-        this.Services.Add(service);
-        var config = new Flutter.EntitySetConfig(service, options);
-        this.EntitySetConfigs.Add(config);
+        var service = new ServiceSingleton(s, options);
+        Services.Add(service);
+        var config = new EntitySetConfig(service, options);
+        EntitySetConfigs.Add(config);
       }
     }
-    public bool HasAnnotations => this.EdmEntityContainer.Annotations.Count() > 0;
-    public string Annotations => JsonSerializer.Serialize(this.EdmEntityContainer.Annotations.Select(annot => annot.ToDictionary()), new JsonSerializerOptions() { WriteIndented = true });
-    public override string FileName => this.EdmEntityContainer.Name.Dasherize() + ".container";
-    public override string Name => Utils.ToDartName(this.EdmEntityContainer.Name, DartElement.Class) + "Container";
-    public string ContainerType => this.EdmEntityContainer.NamespaceQualifiedName;
-    public string ContainerName => this.EdmEntityContainer.Name;
-    public string ApiName => this.Options.Name;
+    public bool HasAnnotations => EdmEntityContainer.Annotations.Count > 0;
+    public string Annotations => JsonSerializer.Serialize(EdmEntityContainer.Annotations.Select(annot => annot.ToDictionary()), new JsonSerializerOptions { WriteIndented = true });
+    public override string FileName => EdmEntityContainer.Name.Dasherize() + ".container";
+    public override string Name => Utils.ToDartName(EdmEntityContainer.Name, DartElement.Class) + "Container";
+    public string ContainerType => EdmEntityContainer.NamespaceQualifiedName;
+    public string ContainerName => EdmEntityContainer.Name;
+    public string ApiName => Options.Name;
     // Imports
-    public override IEnumerable<string> ImportTypes => new List<string> { this.ContainerType };
+    public override IEnumerable<string> ImportTypes => new List<string> { ContainerType };
     public override IEnumerable<Import> Imports => GetImportRecords();
-    public override string Directory => this.EdmEntityContainer.Namespace.Replace('.', Path.DirectorySeparatorChar);
-    public void ResolveDependencies(IEnumerable<Flutter.Enum> enums, IEnumerable<Flutter.Entity> entities, IEnumerable<Flutter.Model> models, IEnumerable<Flutter.Collection> collections)
+    public override string Directory => EdmEntityContainer.Namespace.Replace('.', Path.DirectorySeparatorChar);
+    public void ResolveDependencies(IEnumerable<Enum> enums, IEnumerable<Entity> entities, IEnumerable<Model> models, IEnumerable<Collection> collections)
     {
       // Services
       foreach (var service in Services)
@@ -65,22 +66,22 @@ namespace ODataApiGen.Flutter
         }
       }
 
-      this.AddDependencies(this.EntitySetConfigs);
+      AddDependencies(EntitySetConfigs);
     }
     public IEnumerable<string> GetAllDirectories()
     {
-      return new string[] { this.Service.Directory }
-          .Union(this.Services.Select(s => s.Directory))
-          .Union(this.EntitySetConfigs.Select(s => s.Directory));
+      return new[] { Service.Directory }
+          .Union(Services.Select(s => s.Directory))
+          .Union(EntitySetConfigs.Select(s => s.Directory));
     }
     public IEnumerable<Renderable> Renderables
     {
       get
       {
         var renderables = new List<Renderable>();
-        renderables.Add(this.Service);
-        renderables.AddRange(this.Services);
-        renderables.AddRange(this.EntitySetConfigs);
+        renderables.Add(Service);
+        renderables.AddRange(Services);
+        renderables.AddRange(EntitySetConfigs);
         return renderables;
       }
     }
@@ -88,9 +89,9 @@ namespace ODataApiGen.Flutter
     {
       return new
       {
-        Name = this.ImportedName,
-        ContainerName = this.ContainerName,
-        ContainerType = this.ContainerType
+        Name = ImportedName,
+        ContainerName,
+        ContainerType
       };
     }
   }

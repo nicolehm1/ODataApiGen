@@ -3,8 +3,9 @@ namespace ODataApiGen
     //Docker Name Generator
     class NameGenerator
     {
-        public static string[] Left = new string[] {
-        "Admiring",
+        public static readonly string[] Left =
+        [
+	        "Admiring",
         "Adoring",
         "Affectionate",
         "Agitated",
@@ -111,11 +112,12 @@ namespace ODataApiGen
         "Xenodochial",
         "Youthful",
         "Zealous",
-        "Zen",
-        };
+        "Zen"
+        ];
 
-        public static string[] Right = new string[] {
-		// Muhammad ibn Jābir al-Ḥarrānī al-Battānī was a founding father of astronomy. https://en.wikipedia.org/wiki/Mu%E1%B8%A5ammad_ibn_J%C4%81bir_al-%E1%B8%A4arr%C4%81n%C4%AB_al-Batt%C4%81n%C4%AB
+        public static readonly string[] Right =
+        [
+	        // Muhammad ibn Jābir al-Ḥarrānī al-Battānī was a founding father of astronomy. https://en.wikipedia.org/wiki/Mu%E1%B8%A5ammad_ibn_J%C4%81bir_al-%E1%B8%A4arr%C4%81n%C4%AB_al-Batt%C4%81n%C4%AB
 		"Albattani",
 
 		// Frances E. Allen, became the first female IBM Fellow in 1989. In 2006, she became the first female recipient of the ACM's Turing Award. https://en.wikipedia.org/wiki/Frances_E._Allen
@@ -826,8 +828,8 @@ namespace ODataApiGen
 		"Yonath",
 
 		// Nikolay Yegorovich Zhukovsky (Russian: Никола́й Его́рович Жуко́вский, January 17 1847 – March 17, 1921) was a Russian scientist, mathematician and engineer, and a founding father of modern aero- and hydrodynamics. Whereas contemporary scientists scoffed at the idea of human flight, Zhukovsky was the first to undertake the study of airflow. He is often called the Father of Russian Aviation. https://en.wikipedia.org/wiki/Nikolay_Yegorovich_Zhukovsky
-		"Zhukovsky",
-    };
+		"Zhukovsky"
+        ];
         public static string GetRandomName()
         {
             var rnd = new Random();

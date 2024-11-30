@@ -1,21 +1,22 @@
-using ODataApiGen.Models;
+using DotLiquid;
 using ODataApiGen.Abstracts;
+using ODataApiGen.Models;
 
 namespace ODataApiGen.Angular
 {
-    public abstract class StructuredType : AngularRenderable, DotLiquid.ILiquidizable
+    public abstract class StructuredType : AngularRenderable, ILiquidizable
   {
-    public EntityType EdmEntityType => this.EdmStructuredType as Models.EntityType;
+    public EntityType? EdmEntityType => EdmStructuredType as EntityType;
     public Models.StructuredType EdmStructuredType { get; private set; }
     public StructuredType(Models.StructuredType type, ApiOptions options) : base(options)
     {
       EdmStructuredType = type;
     }
 
-    public StructuredType Base { get; private set; }
+    public StructuredType? Base { get; private set; }
     public void SetBase(StructuredType b)
     {
-      this.Base = b;
+      Base = b;
     }
 
     // Imports
@@ -24,42 +25,39 @@ namespace ODataApiGen.Angular
       get
       {
         var list = new List<string>();
-        if (this.EdmEntityType != null)
+        if (EdmEntityType != null)
         {
-          list.AddRange((this.EdmEntityType as EntityType).Properties.Select(a => a.Type));
-          list.AddRange((this.EdmEntityType as EntityType).NavigationProperties.Select(a => a.Type));
-          list.AddRange((this.EdmEntityType as EntityType).NavigationProperties.Select(a => a.ToEntityType));
-          list.AddRange(this.EdmEntityType.Actions.Select(a => a.Type));
-          list.AddRange(this.EdmEntityType.Functions.Select(a => a.Type));
+          list.AddRange(EdmEntityType.Properties.Select(a => a.Type));
+          list.AddRange(EdmEntityType.NavigationProperties.Select(a => a.Type));
+          list.AddRange(EdmEntityType.NavigationProperties.Select(a => a.ToEntityType));
+          list.AddRange(EdmEntityType.Actions.Select(a => a.Type));
+          list.AddRange(EdmEntityType.Functions.Select(a => a.Type));
         }
         /*For Not-EDM types (e.g. enums with namespaces, complex types*/
-        list.AddRange(this.EdmStructuredType.Properties
+        list.AddRange(EdmStructuredType.Properties
             .Where(a => !a.IsEdmType)
             .Select(a => a.Type));
-        if (this.Base != null)
-          list.Add(this.Base.EdmStructuredType.NamespaceQualifiedName);
+        if (Base != null)
+          list.Add(Base.EdmStructuredType.NamespaceQualifiedName);
         return list.Where(t => !String.IsNullOrWhiteSpace(t) && !t.StartsWith("Edm.")).Distinct();
       }
     }
-    public override string Directory => this.EdmStructuredType.Namespace.Replace('.', Path.DirectorySeparatorChar);
-    public string EntitySetName => Program.Metadata.Schemas.SelectMany(s => s.EntityContainers).SelectMany(c => c.EntitySets).FirstOrDefault(s => s.EntityType == this.EdmStructuredType.NamespaceQualifiedName)?.Name;
-    public string FullName => this.EdmStructuredType.NamespaceQualifiedName; 
-    public bool OpenType => this.EdmStructuredType.OpenType;
+    public override string Directory => EdmStructuredType.Namespace.Replace('.', Path.DirectorySeparatorChar);
+    public bool OpenType => EdmStructuredType.OpenType;
     public override IEnumerable<Import> Imports => GetImportRecords();
 
-    protected IEnumerable<string> RenderCallables(IEnumerable<Callable> allCallables)
+    protected IEnumerable<string> RenderCallables(Callable[] allCallables)
     {
       var names = allCallables.GroupBy(c => c.Name).Select(c => c.Key);
       foreach (var name in names)
       {
-        var callables = allCallables.Where(c => c.Name == name);
-        var overload = callables.Count() > 1;
-        var callable = callables.FirstOrDefault();
+        var callables = allCallables.Where(c => c.Name == name).ToList();
+        var callable = callables.First();
         var methodName = name.Substring(0, 1).ToLower() + name.Substring(1);
 
         var callableNamespaceQualifiedName = callable.IsBound ? $"{callable.Namespace}.{callable.Name}" : callable.Name;
 
-        var typescriptType = this.ToTypescriptType(callable.ReturnType);
+        var typescriptType = ToTypescriptType(callable.ReturnType);
         var callableReturnType = String.IsNullOrEmpty(callable.ReturnType) ?
             "" :
         callable.IsEdmReturnType ?
@@ -70,7 +68,7 @@ namespace ODataApiGen.Angular
             $" as Observable<{typescriptType}Collection<{typescriptType}, {typescriptType}Model<{typescriptType}>>>" :
             $" as Observable<{typescriptType}Model<{typescriptType}>>";
 
-        var parameters = new List<Models.Parameter>();
+        var parameters = new List<Parameter>();
         var optionals = new List<string>();
         foreach (var cal in callables)
         {
@@ -92,12 +90,12 @@ namespace ODataApiGen.Angular
           .Select(p =>
             $"{p.Name}" +
             (optionals.Any(o => o == p.Name) ? "?" : "") +
-            $": {this.ToTypescriptType(p.Type)}" +
-            (p.IsCollection ? "[]" : ""));
+            $": {ToTypescriptType(p.Type)}" +
+            (p.IsCollection ? "[]" : "")).ToList();
 
         var args = new List<string>(arguments);
         if (callable.IsEdmReturnType || callable.IsEnumReturnType) {
-          args.Add($"options?: ODataOptions & {{alias?: boolean}}");
+          args.Add("options?: ODataOptions & {alias?: boolean}");
         } else if (callable.Type == "Function") {
           args.Add($"options?: ODataFunctionOptions<{typescriptType}>");
         } else {
@@ -105,13 +103,13 @@ namespace ODataApiGen.Angular
         }
 
         var types = "null";
-        if (parameters.Count() > 0)
+        if (parameters.Count > 0)
         {
           types = $"{{{String.Join(", ", arguments)}}}";
         }
 
         var values = "null";
-        if (parameters.Count() > 0)
+        if (parameters.Count > 0)
         {
           values = $"{{{String.Join(", ", parameters.Select(p => p.Name))}}}";
         }
@@ -119,16 +117,16 @@ namespace ODataApiGen.Angular
         var responseType = String.IsNullOrEmpty(callable.ReturnType) ?
             "none" :
         callable.IsEdmReturnType ?
-            $"property" :
+            "property" :
         callable.ReturnsCollection ?
-            $"collection" :
-            $"model";
+            "collection" :
+            "model";
         yield return $"public {methodName}({String.Join(", ", args)}) {{" +
             $"\n    return this.call{callable.Type}<{types}, {typescriptType}>('{callableNamespaceQualifiedName}', {values}, '{responseType}', options){callableReturnType};" +
             "\n  }";
       }
     }
-    protected IEnumerable<string> RenderNavigationPropertyBindings(IEnumerable<Models.NavigationPropertyBinding> bindings)
+    protected IEnumerable<string> RenderNavigationPropertyBindings(IEnumerable<NavigationPropertyBinding> bindings)
     {
       var casts = new List<string>();
       foreach (var binding in bindings)
@@ -139,14 +137,14 @@ namespace ODataApiGen.Angular
         var bindingEntity = binding.EntityType;
         var propertyEntity = binding.PropertyType;
 
-        var entity = (Program.Package as Angular.Package).FindEntity(navEntity.NamespaceQualifiedName);
+        var entity = ((Package) Program.Package).FindEntity(navEntity.NamespaceQualifiedName);
         if (propertyEntity != null && bindingEntity.IsBaseOf(propertyEntity) && bindingEntity.HierarchyLevelOf(propertyEntity) == 1)
         {
           var castName = $"as{propertyEntity.Name}";
           if (!casts.Contains(propertyEntity.NamespaceQualifiedName))
           {
             // Cast
-            entity = (Program.Package as Angular.Package).FindEntity(propertyEntity.NamespaceQualifiedName);
+            entity = (Program.Package as Package).FindEntity(propertyEntity.NamespaceQualifiedName);
             yield return $@"public {castName}() {{
     return this.cast<{entity.ImportedName}, {entity.Name}Model<{entity.ImportedName}>>('{propertyEntity.NamespaceQualifiedName}');
   }}";
@@ -157,9 +155,9 @@ namespace ODataApiGen.Angular
         {
           //TODO collection and model name
           var returnType = isCollection ? $"ODataCollection<{entity.ImportedName}, ODataModel<{entity.ImportedName}>>" : $"ODataModel<{entity.ImportedName}>";
-          var responseType = isCollection ? $"collection" : $"model";
+          var responseType = isCollection ? "collection" : "model";
           var methodName = $"as{propertyEntity.Name}" + nav.Name.Substring(0, 1).ToUpper() + nav.Name.Substring(1);
-          var castEntity = (Program.Package as Angular.Package).FindEntity(propertyEntity.NamespaceQualifiedName);
+          var castEntity = (Program.Package as Package).FindEntity(propertyEntity.NamespaceQualifiedName);
 
           // Navigation
           yield return $@"public {methodName}(options?: ODataQueryArgumentsOptions<{entity.ImportedName}>) {{

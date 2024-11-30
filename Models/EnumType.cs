@@ -6,25 +6,25 @@ namespace ODataApiGen.Models
     public class EnumType : Annotable, ILiquidizable
     {
         public Schema Schema {get; private set;}
-        public string Namespace => this.Schema.Namespace;
-        public string Alias => this.Schema.Alias;
+        public string Namespace => Schema.Namespace;
+        public string Alias => Schema.Alias;
         public string Name { get; private set; }
-        public string NamespaceQualifiedName => $"{this.Namespace}.{this.Name}";
-        public string AliasQualifiedName => $"{this.Alias}.{this.Name}";
+        public string NamespaceQualifiedName => $"{Namespace}.{Name}";
+        public string AliasQualifiedName => $"{Alias}.{Name}";
         public bool Flags { get; private set; }
         public IEnumerable<EnumMember> Members { get; private set; }
         public EnumType(XElement element, Schema schema) : base(element)
         {
-            this.Schema = schema;
+            Schema = schema;
             Name = element.Attribute("Name")?.Value;
             Flags = element.Attribute("IsFlags")?.Value == "true";
             Members = element.Descendants().Where(a => a.Name.LocalName == "Member")
                 .Select(member => new EnumMember(member, this)).ToList();
         }
         public bool IsTypeOf(string type) {
-            var names = new List<string>() {$"{this.Schema.Namespace}.{this.Name}"};
-            if (!String.IsNullOrEmpty(this.Schema.Alias))
-                names.Add($"{this.Schema.Alias}.{this.Name}");
+            var names = new List<string> {$"{Schema.Namespace}.{Name}"};
+            if (!String.IsNullOrEmpty(Schema.Alias))
+                names.Add($"{Schema.Alias}.{Name}");
             return names.Contains(type);
         }
 
@@ -32,8 +32,8 @@ namespace ODataApiGen.Models
         {
             return new
             {
-                this.Name,
-                this.NamespaceQualifiedName
+                Name,
+                NamespaceQualifiedName
             };
         }
     }

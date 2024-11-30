@@ -12,7 +12,7 @@ namespace ODataApiGen.Flutter
     }
 
     public static class Utils {
-        public static char[] TypeScriptInvalidNameChars = new char[] {'-', '(', ')'};
+        public static readonly char[] TypeScriptInvalidNameChars = ['-', '(', ')'];
         public static bool IsValidTypeScrtiptName(string name) {
             return !name.Any(c => TypeScriptInvalidNameChars.Contains(c));
         }
@@ -104,7 +104,7 @@ namespace ODataApiGen.Flutter
                 default:
                     {
                         return type.Contains(".") && !type.StartsWith("Edm") ? 
-                            Utils.ToDartName(type.Split('.').Last(a => !String.IsNullOrWhiteSpace(a)), DartElement.Class) : 
+                            ToDartName(type.Split('.').Last(a => !String.IsNullOrWhiteSpace(a)), DartElement.Class) : 
                             "dynamic";
                     }
             }

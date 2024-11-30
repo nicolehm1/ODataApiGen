@@ -6,7 +6,7 @@ namespace ODataApiGen.Models
     {
         public Function(XElement xElement, Schema schema) : base(xElement, schema)
         {
-            this.Type = "Function";
+            Type = "Function";
         }
     }
 }

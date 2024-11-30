@@ -8,7 +8,7 @@ namespace ODataApiGen.Models
         public EntityContainer EntityContainer {get; private set;}
         public Singleton(XElement xElement, EntityContainer container) : base(xElement)
         {
-            this.EntityContainer = container;
+            EntityContainer = container;
             Name = xElement.Attribute("Name")?.Value;
             Type = xElement.Attribute("Type")?.Value;
 
@@ -30,8 +30,8 @@ namespace ODataApiGen.Models
         }
         public string Name { get; private set; }
         public string Type { get; private set; }
-        public string Namespace => this.EntityContainer.Schema.Namespace; 
-        public string NamespaceQualifiedName => $"{this.Namespace}.{this.Name}";
+        public string Namespace => EntityContainer.Schema.Namespace; 
+        public string NamespaceQualifiedName => $"{Namespace}.{Name}";
         public IEnumerable<Action> Actions { get; set; }
         public IEnumerable<Function> Functions { get; set; }
         public IEnumerable<NavigationPropertyBinding> NavigationPropertyBindings { get; set; }
@@ -39,8 +39,8 @@ namespace ODataApiGen.Models
         {
             return new
             {
-                this.Name,
-                this.NamespaceQualifiedName
+                Name,
+                NamespaceQualifiedName
             };
         }
     }

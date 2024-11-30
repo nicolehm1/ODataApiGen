@@ -1,10 +1,11 @@
-using ODataApiGen.Models;
-using ODataApiGen.Abstracts;
 using System.Text.Json;
+using DotLiquid;
+using ODataApiGen.Abstracts;
+using ODataApiGen.Models;
 
 namespace ODataApiGen.Angular
 {
-    public class EntityContainerConfig : AngularRenderable, DotLiquid.ILiquidizable
+    public class EntityContainerConfig : AngularRenderable, ILiquidizable
   {
     public EntityContainer EdmEntityContainer { get; private set; }
     public ServiceContainer Service { get; private set; }
@@ -13,35 +14,35 @@ namespace ODataApiGen.Angular
     public ICollection<SingletonConfig> SingletonConfigs { get; } = new List<SingletonConfig>();
     public EntityContainerConfig(EntityContainer container, ApiOptions options) : base(options)
     {
-      this.EdmEntityContainer = container;
-      this.Service = new ServiceContainer(this, options);
+      EdmEntityContainer = container;
+      Service = new ServiceContainer(this, options);
       foreach (var eset in container.EntitySets)
       {
         var service = new ServiceEntitySet(eset, options);
-        this.Services.Add(service);
+        Services.Add(service);
         var config = new EntitySetConfig(service, options);
-        this.EntitySetConfigs.Add(config);
+        EntitySetConfigs.Add(config);
       }
       foreach (var s in container.Singletons)
       {
         var service = new ServiceSingleton(s, options);
-        this.Services.Add(service);
+        Services.Add(service);
         var config = new SingletonConfig(service, options);
-        this.SingletonConfigs.Add(config);
+        SingletonConfigs.Add(config);
       }
     }
-    public bool HasAnnotations => this.EdmEntityContainer.Annotations.Count() > 0;
-    public string Annotations => JsonSerializer.Serialize(this.EdmEntityContainer.Annotations.Select(annot => annot.ToDictionary()), new JsonSerializerOptions() { WriteIndented = true });
-    public override string FileName => this.EdmEntityContainer.Name.Dasherize() + ".entitycontainer.config";
-    public override string Name => Utils.ToTypescriptName(this.EdmEntityContainer.Name, TypeScriptElement.Class) + "EntityContainerConfig";
-    public string ContainerType => this.EdmEntityContainer.NamespaceQualifiedName;
-    public string ContainerName => this.EdmEntityContainer.Name;
-    public string ApiName => this.Options.Name;
+    public bool HasAnnotations => EdmEntityContainer.Annotations.Count > 0;
+    public string Annotations => JsonSerializer.Serialize(EdmEntityContainer.Annotations.Select(annot => annot.ToDictionary()), new JsonSerializerOptions { WriteIndented = true });
+    public override string FileName => EdmEntityContainer.Name.Dasherize() + ".entitycontainer.config";
+    public override string Name => Utils.ToTypescriptName(EdmEntityContainer.Name, TypeScriptElement.Class) + "EntityContainerConfig";
+    public string ContainerType => EdmEntityContainer.NamespaceQualifiedName;
+    public string ContainerName => EdmEntityContainer.Name;
+    public string ApiName => Options.Name;
     // Imports
-    public override IEnumerable<string> ImportTypes => new List<string> { this.ContainerType };
+    public override IEnumerable<string> ImportTypes => new List<string> { ContainerType };
     public override IEnumerable<Import> Imports => GetImportRecords();
-    public override string Directory => this.EdmEntityContainer.Namespace.Replace('.', Path.DirectorySeparatorChar);
-    public void ResolveDependencies(IEnumerable<Angular.Enum> enums, IEnumerable<Angular.Entity> entities, IEnumerable<Angular.Model> models, IEnumerable<Angular.Collection> collections)
+    public override string Directory => EdmEntityContainer.Namespace.Replace('.', Path.DirectorySeparatorChar);
+    public void ResolveDependencies(IEnumerable<Enum> enums, ICollection<Entity> entities, ICollection<Model> models, ICollection<Collection> collections)
     {
       // Services
       foreach (var service in Services)
@@ -66,15 +67,15 @@ namespace ODataApiGen.Angular
         }
       }
 
-      this.AddDependencies(this.EntitySetConfigs);
-      this.AddDependencies(this.SingletonConfigs);
+      AddDependencies(EntitySetConfigs);
+      AddDependencies(SingletonConfigs);
     }
     public IEnumerable<string> GetAllDirectories()
     {
-      return new string[] { this.Service.Directory }
-          .Union(this.Services.Select(s => s.Directory))
-          .Union(this.EntitySetConfigs.Select(s => s.Directory))
-          .Union(this.SingletonConfigs.Select(s => s.Directory));
+      return new[] { Service.Directory }
+          .Union(Services.Select(s => s.Directory))
+          .Union(EntitySetConfigs.Select(s => s.Directory))
+          .Union(SingletonConfigs.Select(s => s.Directory));
     }
     public IEnumerable<Renderable> Renderables
     {
@@ -82,11 +83,11 @@ namespace ODataApiGen.Angular
       {
         var renderables = new List<Renderable>
         {
-            this.Service
+            Service
         };
-        renderables.AddRange(this.Services);
-        renderables.AddRange(this.EntitySetConfigs);
-        renderables.AddRange(this.SingletonConfigs);
+        renderables.AddRange(Services);
+        renderables.AddRange(EntitySetConfigs);
+        renderables.AddRange(SingletonConfigs);
         return renderables;
       }
     }
@@ -94,9 +95,9 @@ namespace ODataApiGen.Angular
     {
       return new
       {
-        this.ContainerName,
-        this.ContainerType,
-        Name = this.ImportedName
+        ContainerName,
+        ContainerType,
+        Name = ImportedName
       };
     }
   }

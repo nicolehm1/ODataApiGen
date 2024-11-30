@@ -4,18 +4,18 @@ namespace ODataApiGen.Angular
 {
     public class Index : AngularRenderable
     {
-        public Angular.Package Package {get; private set;}
-        public Index(Angular.Package package, ApiOptions options) : base(options)
+        public Package Package {get; private set;}
+        public Index(Package package, ApiOptions options) : base(options)
         {
-            this.Package = package;
+            Package = package;
         }
         // Imports
-        public override IEnumerable<string> ImportTypes => Enumerable.Empty<string>();
+        public override IEnumerable<string> ImportTypes => [];
         // Exports
         public override IEnumerable<Import> Imports => GetImportRecords();
-        public override string Name => this.Package.Name;
+        public override string Name => Package.Name;
         public override string FileName => "index";
         public override string Directory => "";
-        public IEnumerable<string> Exports =>this.GetImportRecords().Select(import => $"export * from './{import.From}'");
+        public IEnumerable<string> Exports =>GetImportRecords().Select(import => $"export * from './{import.From}'");
     }
 }

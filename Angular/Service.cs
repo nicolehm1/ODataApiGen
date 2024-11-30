@@ -6,37 +6,37 @@ namespace ODataApiGen.Angular
 {
     public abstract class Service : AngularRenderable, ILiquidizable
   {
-    public EntityType EdmEntityType => this.HasModel ? this.Model.EdmEntityType :
-        this.HasEntity ? this.Entity.EdmEntityType :
+    public EntityType EdmEntityType => HasModel ? Model.EdmEntityType :
+        HasEntity ? Entity.EdmEntityType :
         null;
     public Service(ApiOptions options) : base(options) { }
 
-    public Angular.Entity Entity { get; private set; }
-    public void SetEntity(Angular.Entity entity)
+    public Entity Entity { get; private set; }
+    public void SetEntity(Entity entity)
     {
-      this.Entity = entity;
+      Entity = entity;
     }
-    public bool HasEntity => this.Entity != null;
-    public string EntityName => this.HasEntity ? this.Entity.ImportedName : String.Empty;
+    public bool HasEntity => Entity != null;
+    public string EntityName => HasEntity ? Entity.ImportedName : String.Empty;
     public Model Model { get; private set; }
     public void SetModel(Model model)
     {
-      this.Model = model;
+      Model = model;
     }
-    public bool HasModel => this.Model != null;
-    public string ModelName => this.HasModel ? this.Model.ImportedName : String.Empty;
+    public bool HasModel => Model != null;
+    public string ModelName => HasModel ? Model.ImportedName : String.Empty;
     public Collection Collection { get; private set; }
     public void SetCollection(Collection collection)
     {
-      this.Collection = collection;
+      Collection = collection;
     }
-    public bool HasCollection => this.Collection != null;
-    public string CollectionName => this.HasCollection ? this.Collection.ImportedName : String.Empty;
+    public bool HasCollection => Collection != null;
+    public string CollectionName => HasCollection ? Collection.ImportedName : String.Empty;
     public abstract string EntityType {get;} 
     public abstract string ServiceType {get;} 
     public abstract string EdmNamespace {get;} 
     public abstract IEnumerable<Annotation> Annotations { get; }
-    public override string Directory => this.EdmNamespace.Replace('.', Path.DirectorySeparatorChar);
+    public override string Directory => EdmNamespace.Replace('.', Path.DirectorySeparatorChar);
     protected IEnumerable<string> RenderCallables(IEnumerable<Callable> allCallables)
     {
       var names = allCallables.GroupBy(c => c.Name).Select(c => c.Key);
@@ -50,7 +50,7 @@ namespace ODataApiGen.Angular
 
         var callableNamespaceQualifiedName = $"{callable.Namespace}.{callable.Name}";
 
-        var typescriptType = this.ToTypescriptType(callable.ReturnType);
+        var typescriptType = ToTypescriptType(callable.ReturnType);
         if ((callable.IsEdmReturnType || callable.IsEnumReturnType) && callable.ReturnsCollection) 
           typescriptType += "[]";
 
@@ -64,7 +64,7 @@ namespace ODataApiGen.Angular
             $" as Observable<ODataEntities<{typescriptType}>>" :
             $" as Observable<ODataEntity<{typescriptType}>>";
 
-        var parameters = new List<Models.Parameter>();
+        var parameters = new List<Parameter>();
         var optionals = new List<string>();
         foreach (var cal in callables)
         {
@@ -98,12 +98,12 @@ namespace ODataApiGen.Angular
           .Select(p =>
             $"{p.Name}" +
             (optionals.Any(o => o == p.Name) ? "?" : "") +
-            $": {this.ToTypescriptType(p.Type)}" +
+            $": {ToTypescriptType(p.Type)}" +
             (p.IsCollection ? "[]" : ""));
 
         args.AddRange(arguments);
         if (callable.IsEdmReturnType || callable.IsEnumReturnType) {
-          args.Add($"options?: ODataOptions & {{alias?: boolean}}");
+          args.Add("options?: ODataOptions & {alias?: boolean}");
         } else if (callable.Type == "Function") {
           args.Add($"options?: ODataFunctionOptions<{typescriptType}>");
         } else {
@@ -111,13 +111,13 @@ namespace ODataApiGen.Angular
         }
 
         var type = "null";
-        if (parameters.Count() > 0)
+        if (parameters.Count > 0)
         {
           type = $"{{{String.Join(", ", arguments)}}}";
         }
 
         var values = "null";
-        if (parameters.Count() > 0)
+        if (parameters.Count > 0)
         {
           values = $"{{{String.Join(", ", parameters.Select(p => p.Name))}}}";
         }
@@ -125,12 +125,12 @@ namespace ODataApiGen.Angular
         var responseType = String.IsNullOrEmpty(callable.ReturnType) ?
             "none" :
         callable.IsEdmReturnType ?
-            $"property" :
+            "property" :
         callable.IsEnumReturnType ?
-            $"property" :
+            "property" :
         callable.ReturnsCollection ?
-            $"entities" :
-            $"entity";
+            "entities" :
+            "entity";
 
         // Function
         yield return $"public {methodName}({String.Join(", ", boundArgs)}): OData{callable.Type}Resource<{type}, {typescriptType}> {{ " +
@@ -147,7 +147,7 @@ namespace ODataApiGen.Angular
       }
     }
 
-    protected IEnumerable<string> RenderNavigationPropertyBindings(IEnumerable<Models.NavigationPropertyBinding> bindings)
+    protected IEnumerable<string> RenderNavigationPropertyBindings(IEnumerable<NavigationPropertyBinding> bindings)
     {
       var casts = new List<string>();
       foreach (var binding in bindings)
@@ -158,22 +158,22 @@ namespace ODataApiGen.Angular
         var bindingEntity = binding.EntityType;
         var propertyEntity = binding.PropertyType;
 
-        var entity = (Program.Package as Angular.Package).FindEntity(navEntity.NamespaceQualifiedName);
+        var entity = (Program.Package as Package).FindEntity(navEntity.NamespaceQualifiedName);
         var returnType = isCollection ? $"ODataEntities<{entity.ImportedName}>" : $"ODataEntity<{entity.ImportedName}>";
-        var responseType = isCollection ? $"entities" : $"entity";
+        var responseType = isCollection ? "entities" : "entity";
         if (propertyEntity != null && bindingEntity.IsBaseOf(propertyEntity))
         {
           var castName = $"as{propertyEntity.Name}";
           if (!casts.Contains(propertyEntity.NamespaceQualifiedName))
           {
             // Cast
-            entity = (Program.Package as Angular.Package).FindEntity(propertyEntity.NamespaceQualifiedName);
+            entity = (Program.Package as Package).FindEntity(propertyEntity.NamespaceQualifiedName);
             yield return $@"public {castName}(): ODataEntitySetResource<{entity.ImportedName}> {{
     return this.entities().cast<{entity.ImportedName}>('{propertyEntity.NamespaceQualifiedName}');
   }}";
             casts.Add(propertyEntity.NamespaceQualifiedName);
           }
-          entity = (Program.Package as Angular.Package).FindEntity(navEntity.NamespaceQualifiedName);
+          entity = (Program.Package as Package).FindEntity(navEntity.NamespaceQualifiedName);
 
           var navMethodName = castName + nav.Name.Substring(0, 1).ToUpper() + nav.Name.Substring(1);
           var fetchMethodName = castName + "Fetch" + nav.Name.Substring(0, 1).ToUpper() + nav.Name.Substring(1);
@@ -249,7 +249,7 @@ namespace ODataApiGen.Angular
     {
       return new
       {
-        Name = this.ImportedName
+        Name = ImportedName
       };
     }
 

@@ -1,13 +1,14 @@
 using ODataApiGen.Abstracts;
+using ODataApiGen.Models;
 
 namespace ODataApiGen.Angular
 {
     public class Collection : StructuredType
     {
-        public Angular.Model Model { get; private set; }
-        public Collection(Models.StructuredType type, Angular.Model model, ApiOptions options) : base(type, options)
+        public Model Model { get; private set; }
+        public Collection(Models.StructuredType type, Model model, ApiOptions options) : base(type, options)
         {
-            this.Model = model;
+            Model = model;
         }
 
         // Imports
@@ -15,20 +16,20 @@ namespace ODataApiGen.Angular
         {
             get
             {
-                var parameters = new List<Models.Parameter>();
+                var parameters = new List<Parameter>();
                 var list = new List<string> {
-                    this.Model.Entity.EdmStructuredType.NamespaceQualifiedName
+                    Model.Entity.EdmStructuredType.NamespaceQualifiedName
                 };
-                list.AddRange(this.EdmStructuredType.Properties.Select(a => a.Type));
-                if (this.EdmEntityType != null) {
-                    list.AddRange(this.EdmEntityType.Properties.Select(a => a.Type));
-                    list.AddRange(this.EdmEntityType.NavigationProperties.Select(a => a.Type));
-                    list.AddRange(this.EdmEntityType.NavigationProperties.Select(a => a.ToEntityType));
-                    list.AddRange(this.EdmEntityType.Actions.SelectMany(a => this.CallableNamespaces(a)));
-                    list.AddRange(this.EdmEntityType.Functions.SelectMany(a => this.CallableNamespaces(a)));
-                    foreach (var cal in this.EdmEntityType.Actions)
+                list.AddRange(EdmStructuredType.Properties.Select(a => a.Type));
+                if (EdmEntityType != null) {
+                    list.AddRange(EdmEntityType.Properties.Select(a => a.Type));
+                    list.AddRange(EdmEntityType.NavigationProperties.Select(a => a.Type));
+                    list.AddRange(EdmEntityType.NavigationProperties.Select(a => a.ToEntityType));
+                    list.AddRange(EdmEntityType.Actions.SelectMany(a => CallableNamespaces(a)));
+                    list.AddRange(EdmEntityType.Functions.SelectMany(a => CallableNamespaces(a)));
+                    foreach (var cal in EdmEntityType.Actions)
                         parameters.AddRange(cal.Parameters);
-                    foreach (var cal in this.EdmEntityType.Functions)
+                    foreach (var cal in EdmEntityType.Functions)
                         parameters.AddRange(cal.Parameters);
                     list.AddRange(parameters.Select(p => p.Type));
                 }
@@ -36,34 +37,34 @@ namespace ODataApiGen.Angular
             }
         }
         // Exports
-        public override string FileName => this.EdmStructuredType.Name.Dasherize() + ".collection";
-        public override string Name => Utils.ToTypescriptName(this.EdmStructuredType.Name, TypeScriptElement.Class) + "Collection";
-        public string ModelName => this.Model.ImportedName;
+        public override string FileName => EdmStructuredType.Name.Dasherize() + ".collection";
+        public override string Name => Utils.ToTypescriptName(EdmStructuredType.Name, TypeScriptElement.Class) + "Collection";
+        public string ModelName => Model.ImportedName;
         public override IEnumerable<Import> Imports => GetImportRecords();
 
         public override object ToLiquid()
         {
             return new {
-                Name = this.ImportedName,
+                Name = ImportedName,
             };
         }
 
         public IEnumerable<string> Actions {
             get {
-                if (this.EdmEntityType != null) {
-                    var collectionActions = this.EdmEntityType.Actions.Where(a => a.IsCollection);
-                    return collectionActions.Count() > 0 ? this.RenderCallables(collectionActions) : Enumerable.Empty<string>();
+                if (EdmEntityType != null) {
+                    var collectionActions = EdmEntityType.Actions.Where(a => a.IsCollection).Cast<Callable>().ToArray();
+                    return collectionActions.Length > 0 ? RenderCallables(collectionActions) : [];
                 }
-                return Enumerable.Empty<string>();
+                return [];
             }
         }
         public IEnumerable<string> Functions {
             get {
-                if (this.EdmEntityType != null) {
-                    var collectionFunctions = this.EdmEntityType.Functions.Where(a => a.IsCollection);
-                    return collectionFunctions.Count() > 0 ? this.RenderCallables(collectionFunctions) : Enumerable.Empty<string>();
+                if (EdmEntityType != null) {
+                    var collectionFunctions = EdmEntityType.Functions.Where(a => a.IsCollection).Cast<Callable>().ToArray();
+                    return collectionFunctions.Length > 0 ? RenderCallables(collectionFunctions) : [];
                 }
-                return Enumerable.Empty<string>();
+                return [];
             }
         }
     }

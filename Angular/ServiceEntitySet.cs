@@ -14,47 +14,47 @@ namespace ODataApiGen.Angular
     {
       get
       {
-        var parameters = new List<Models.Parameter>();
-        foreach (var cal in this.EdmEntitySet.Actions)
+        var parameters = new List<Parameter>();
+        foreach (var cal in EdmEntitySet.Actions)
           parameters.AddRange(cal.Parameters);
-        foreach (var cal in this.EdmEntitySet.Functions)
+        foreach (var cal in EdmEntitySet.Functions)
           parameters.AddRange(cal.Parameters);
 
         var list = new List<string> {
-                    this.EdmEntitySet.EntityType
+                    EdmEntitySet.EntityType
                 };
         list.AddRange(parameters.Select(p => p.Type));
-        list.AddRange(this.EdmEntitySet.Actions.SelectMany(a => this.CallableNamespaces(a)));
-        list.AddRange(this.EdmEntitySet.Functions.SelectMany(a => this.CallableNamespaces(a)));
-        list.AddRange(this.EdmEntitySet.NavigationPropertyBindings.Select(b => b.NavigationProperty.Type));
-        list.AddRange(this.EdmEntitySet.NavigationPropertyBindings.Select(b => b.PropertyType).Where(t => t != null).Select(t => t.NamespaceQualifiedName));
-        if (this.EdmEntityType != null)
+        list.AddRange(EdmEntitySet.Actions.SelectMany(a => CallableNamespaces(a)));
+        list.AddRange(EdmEntitySet.Functions.SelectMany(a => CallableNamespaces(a)));
+        list.AddRange(EdmEntitySet.NavigationPropertyBindings.Select(b => b.NavigationProperty.Type));
+        list.AddRange(EdmEntitySet.NavigationPropertyBindings.Select(b => b.PropertyType).Where(t => t != null).Select(t => t.NamespaceQualifiedName));
+        if (EdmEntityType != null)
         {
-          list.AddRange(this.EdmEntityType.Actions.SelectMany(a => this.CallableNamespaces(a)));
-          list.AddRange(this.EdmEntityType.Functions.SelectMany(a => this.CallableNamespaces(a)));
+          list.AddRange(EdmEntityType.Actions.SelectMany(a => CallableNamespaces(a)));
+          list.AddRange(EdmEntityType.Functions.SelectMany(a => CallableNamespaces(a)));
         }
-        if (this.HasEntity)
+        if (HasEntity)
         {
-          list.AddRange(this.Entity.EdmStructuredType.Properties.Select(a => a.Type));
+          list.AddRange(Entity.EdmStructuredType.Properties.Select(a => a.Type));
         }
-        if (this.HasModel)
+        if (HasModel)
         {
-          list.AddRange(this.Model.EdmStructuredType.Properties.Select(a => a.Type));
+          list.AddRange(Model.EdmStructuredType.Properties.Select(a => a.Type));
         }
         return list.Where(t => !String.IsNullOrWhiteSpace(t) && !t.StartsWith("Edm.")).Distinct();
       }
     }
 
     public override IEnumerable<Import> Imports => GetImportRecords();
-    public string EntitySetName => this.EdmEntitySet.Name;
-    public override string EntityType => this.EdmEntitySet.EntityType;
-    public override string ServiceType => this.EdmEntitySet.NamespaceQualifiedName;
-    public override string Name => Utils.ToTypescriptName(this.EdmEntitySet.Name, TypeScriptElement.Class) + "Service";
-    public override string EdmNamespace => this.EdmEntitySet.Namespace;
-    public override string FileName => this.EdmEntitySet.Name.Dasherize() + ".service";
-    public IEnumerable<string> Actions => this.RenderCallables(this.EdmEntitySet.Actions.Union(this.EdmEntityType.Actions));
-    public IEnumerable<string> Functions => this.RenderCallables(this.EdmEntitySet.Functions.Union(this.EdmEntityType.Functions));
-    public IEnumerable<string> Navigations => this.RenderNavigationPropertyBindings(this.EdmEntitySet.NavigationPropertyBindings);
-    public override IEnumerable<Models.Annotation> Annotations => this.EdmEntitySet.Annotations;
+    public string EntitySetName => EdmEntitySet.Name;
+    public override string EntityType => EdmEntitySet.EntityType;
+    public override string ServiceType => EdmEntitySet.NamespaceQualifiedName;
+    public override string Name => Utils.ToTypescriptName(EdmEntitySet.Name, TypeScriptElement.Class) + "Service";
+    public override string EdmNamespace => EdmEntitySet.Namespace;
+    public override string FileName => EdmEntitySet.Name.Dasherize() + ".service";
+    public IEnumerable<string> Actions => RenderCallables(EdmEntitySet.Actions.Union(EdmEntityType.Actions));
+    public IEnumerable<string> Functions => RenderCallables(EdmEntitySet.Functions.Union(EdmEntityType.Functions));
+    public IEnumerable<string> Navigations => RenderNavigationPropertyBindings(EdmEntitySet.NavigationPropertyBindings);
+    public override IEnumerable<Annotation> Annotations => EdmEntitySet.Annotations;
   }
 }

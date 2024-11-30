@@ -3,34 +3,27 @@ using ODataApiGen.Abstracts;
 
 namespace ODataApiGen.Angular
 {
-    public class Package : ODataApiGen.Abstracts.Package, ILiquidizable
+    public class Package : Abstracts.Package, ILiquidizable
     {
         //public Angular.Api Api { get; private set; }
-        public Angular.Module Module { get; private set; }
-        public Angular.ApiConfig Config { get; private set; }
-        public Angular.Index Index { get; private set; }
-        public ICollection<Angular.SchemaConfig> Schemas { get; private set; } = new List<Angular.SchemaConfig>();
-        public IEnumerable<Angular.Enum> Enums => this.Schemas.SelectMany(s => s.Enums);
-        public Enum FindEnum(string type) {
-            return this.Enums.FirstOrDefault(m => m.EdmEnumType.IsTypeOf(type));
-        }
-        public IEnumerable<Angular.Entity> Entities => this.Schemas.SelectMany(s => s.Entities);
-        public Entity FindEntity(string type) {
-            return this.Entities.FirstOrDefault(m => m.EdmStructuredType.IsTypeOf(type));
-        }
-        public IEnumerable<Angular.Model> Models => this.Schemas.SelectMany(s => s.Models);
-        public Model FindModel(string type) {
-            return this.Models.FirstOrDefault(m => m.EdmStructuredType.IsTypeOf(type));
-        }
-        public IEnumerable<Angular.Collection> Collections => this.Schemas.SelectMany(s => s.Collections);
-        public Collection FindCollection(string type) {
-            return this.Collections.FirstOrDefault(m => m.EdmStructuredType.IsTypeOf(type));
-        }
+        public Module Module { get; private set; }
+        public ApiConfig Config { get; private set; }
+        public Index Index { get; private set; }
+        public ICollection<SchemaConfig> Schemas { get; private set; } = new List<SchemaConfig>();
+        public IEnumerable<Enum> Enums => Schemas.SelectMany(s => s.Enums);
+        public Enum FindEnum(string type) => Enums.First(m => m.EdmEnumType.IsTypeOf(type));
+        public Entity[] Entities => Schemas.SelectMany(s => s.Entities).ToArray();
+        public Entity FindEntity(string type) => Entities.First(m => m.EdmStructuredType.IsTypeOf(type));
+        public Model[] Models => Schemas.SelectMany(s => s.Models).ToArray();
+        public Model FindModel(string type) => Models.First(m => m.EdmStructuredType.IsTypeOf(type));
+        public Collection[] Collections => Schemas.SelectMany(s => s.Collections).ToArray();
+        public Collection FindCollection(string type) => Collections.First(m => m.EdmStructuredType.IsTypeOf(type));
+
         public Package(ApiOptions options) : base(options)
         {
-            this.Module = new Module(this, options);
-            this.Config = new Angular.ApiConfig(this, options);
-            this.Index = new Angular.Index(this, options);
+            Module = new Module(this, options);
+            Config = new ApiConfig(this, options);
+            Index = new Index(this, options);
             //this.Api = new Angular.Api(this, options);
         }
 
@@ -38,7 +31,7 @@ namespace ODataApiGen.Angular
         {
             foreach (var schema in Program.Metadata.Schemas)
             {
-                this.Schemas.Add(new Angular.SchemaConfig(schema, this.Options));
+                Schemas.Add(new SchemaConfig(schema, Options));
             }
         }
         public override void ResolveDependencies()
@@ -52,7 +45,7 @@ namespace ODataApiGen.Angular
             {
                 if (!String.IsNullOrEmpty(entity.EdmStructuredType.BaseType))
                 {
-                    var baseEntity = this.Entities.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(entity.EdmStructuredType.BaseType));
+                    var baseEntity = Entities.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(entity.EdmStructuredType.BaseType));
                     entity.SetBase(baseEntity);
                     entity.AddDependency(baseEntity);
                 }
@@ -62,11 +55,11 @@ namespace ODataApiGen.Angular
             {
                 if (!String.IsNullOrEmpty(model.EdmStructuredType.BaseType))
                 {
-                    var baseModel = this.Models.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(model.EdmStructuredType.BaseType));
+                    var baseModel = Models.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(model.EdmStructuredType.BaseType));
                     model.SetBase(baseModel);
                     model.AddDependency(baseModel);
                 }
-                var collection = this.Collections.FirstOrDefault(m => m.EdmStructuredType.Name == model.EdmStructuredType.Name);
+                var collection = Collections.FirstOrDefault(m => m.EdmStructuredType.Name == model.EdmStructuredType.Name);
                 if (collection != null)
                 {
                     model.SetCollection(collection);
@@ -78,7 +71,7 @@ namespace ODataApiGen.Angular
             {
                 if (!String.IsNullOrEmpty(collection.EdmStructuredType.BaseType))
                 {
-                    var baseCollection = this.Collections.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(collection.EdmStructuredType.BaseType));
+                    var baseCollection = Collections.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(collection.EdmStructuredType.BaseType));
                     collection.SetBase(baseCollection);
                     collection.AddDependency(baseCollection);
                 }
@@ -89,29 +82,29 @@ namespace ODataApiGen.Angular
                 schema.ResolveDependencies();
                 foreach (var container in schema.Containers)
                 {
-                    container.ResolveDependencies(this.Enums, this.Entities, this.Models, this.Collections);
+                    container.ResolveDependencies(Enums, Entities, Models, Collections);
                 }
             }
 
             // Resolve Renderable Dependencies
-            foreach (var renderable in this.Renderables)
+            foreach (var renderable in Renderables)
             {
                 var types = renderable.ImportTypes;
                 if (renderable is Enum || renderable is EnumTypeConfig || renderable is Entity || renderable is Model || renderable is Collection || renderable is Service)
                 {
                     renderable.AddDependencies(
-    this.Enums.Where(e => e != renderable && types.Any(type => e.EdmEnumType.IsTypeOf(type))));
+    Enums.Where(e => e != renderable && types.Any(type => e.EdmEnumType.IsTypeOf(type))));
                     if (renderable is Entity || renderable is Model || renderable is Collection || renderable is Service)
                     {
                         renderable.AddDependencies(
-        this.Entities.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
+        Entities.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
                         if (!(renderable is EnumTypeConfig))
                         {
                             {
                                 renderable.AddDependencies(
-                this.Models.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
+                Models.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
                                 renderable.AddDependencies(
-                this.Collections.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
+                Collections.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
                             }
                         }
                     }
@@ -119,8 +112,8 @@ namespace ODataApiGen.Angular
             }
 
             // Module
-            this.Module.AddDependencies(this.Schemas.SelectMany(s => s.Containers.Select(c => c.Service)));
-            this.Module.AddDependencies(this.Schemas.SelectMany(s => s.Containers.SelectMany(c => c.Services)));
+            Module.AddDependencies(Schemas.SelectMany(s => s.Containers.Select(c => c.Service)));
+            Module.AddDependencies(Schemas.SelectMany(s => s.Containers.SelectMany(c => c.Services)));
             // Api
             //this.Api.EnumTypeConfigs = this.Schemas.SelectMany(s => s.EnumTypeConfigs);
             //this.Api.StructuredTypeConfigs = this.Schemas.SelectMany(s => s.StructuredTypeConfigs);
@@ -128,26 +121,26 @@ namespace ODataApiGen.Angular
             //this.Api.SingletonConfigs = this.Schemas.SelectMany(s => s.Containers.SelectMany(c => c.SingletonConfigs));
             //this.Api.CallableConfigs = this.Schemas.SelectMany(s => s.CallablesConfigs);
             // Config
-            this.Config.AddDependencies(this.Schemas);
+            Config.AddDependencies(Schemas);
             // Index
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Enums));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.EnumTypeConfigs));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Entities));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Models));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Collections));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.StructuredTypeConfigs));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Containers.Select(c => c.Service)));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Containers.SelectMany(c => c.Services)));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Containers.SelectMany(c => c.EntitySetConfigs)));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Containers.SelectMany(c => c.SingletonConfigs)));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Enums));
+            Index.AddDependencies(Schemas.SelectMany(s => s.EnumTypeConfigs));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Entities));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Models));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Collections));
+            Index.AddDependencies(Schemas.SelectMany(s => s.StructuredTypeConfigs));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Containers.Select(c => c.Service)));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Containers.SelectMany(c => c.Services)));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Containers.SelectMany(c => c.EntitySetConfigs)));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Containers.SelectMany(c => c.SingletonConfigs)));
             //this.Index.AddDependency(this.Api);
-            this.Index.AddDependency(this.Config);
-            this.Index.AddDependency(this.Module);
+            Index.AddDependency(Config);
+            Index.AddDependency(Module);
         }
 
         public override IEnumerable<string> GetAllDirectories()
         {
-            return this.Schemas.SelectMany(s => s.GetAllDirectories())
+            return Schemas.SelectMany(s => s.GetAllDirectories())
                 .Distinct();
         }
 
@@ -155,10 +148,10 @@ namespace ODataApiGen.Angular
         {
             return new
             {
-                this.Name,
-                this.ServiceRootUrl,
-                this.Version,
-                this.Schemas,
+                Name,
+                ServiceRootUrl,
+                Version,
+                Schemas,
                 Creation = DateTime.Now
             };
         }
@@ -170,12 +163,12 @@ namespace ODataApiGen.Angular
                 var renderables = new List<Renderable>
                 {
                     //this.Api,
-                    this.Module,
-                    this.Config,
-                    this.Index
+                    Module,
+                    Config,
+                    Index
                 };
-                renderables.AddRange(this.Schemas);
-                renderables.AddRange(this.Schemas.SelectMany(s => s.Renderables));
+                renderables.AddRange(Schemas);
+                renderables.AddRange(Schemas.SelectMany(s => s.Renderables));
                 return renderables;
             }
         }

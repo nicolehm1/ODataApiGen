@@ -8,13 +8,13 @@ namespace ODataApiGen.Angular
         public Uri From { get; set; }
         public Import(IEnumerable<string> names, Uri from)
         {
-            this.Names = names;
-            this.From = from;
+            Names = names;
+            From = from;
         }
 
         public string Path {
             get {
-                var path = this.From.ToString();
+                var path = From.ToString();
                 if (!path.StartsWith("../"))
                     path = $"./{path}";
                 return path;
@@ -23,7 +23,7 @@ namespace ODataApiGen.Angular
 
         public object ToLiquid()
         {
-            return new {this.Path, this.Names};
+            return new {Path, Names};
         }
     }
 }

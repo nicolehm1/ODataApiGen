@@ -3,40 +3,40 @@ using ODataApiGen.Abstracts;
 
 namespace ODataApiGen.Flutter
 {
-    public class Package : ODataApiGen.Abstracts.Package, ILiquidizable
+    public class Package : Abstracts.Package, ILiquidizable
     {
-        public Flutter.Module Module { get; private set; }
-        public Flutter.ApiConfig Config { get; private set; }
-        public Flutter.Index Index { get; private set; }
-        public ICollection<Flutter.SchemaConfig> Schemas { get; private set; } = new List<Flutter.SchemaConfig>();
-        public IEnumerable<Flutter.Enum> Enums => this.Schemas.SelectMany(s => s.Enums);
+        public Module Module { get; private set; }
+        public ApiConfig Config { get; private set; }
+        public Index Index { get; private set; }
+        public ICollection<SchemaConfig> Schemas { get; private set; } = new List<SchemaConfig>();
+        public IEnumerable<Enum> Enums => Schemas.SelectMany(s => s.Enums);
         public Enum FindEnum(string type) {
-            return this.Enums.FirstOrDefault(m => m.EdmEnumType.IsTypeOf(type));
+            return Enums.FirstOrDefault(m => m.EdmEnumType.IsTypeOf(type));
         }
-        public IEnumerable<Flutter.Entity> Entities => this.Schemas.SelectMany(s => s.Entities);
+        public IEnumerable<Entity> Entities => Schemas.SelectMany(s => s.Entities);
         public Entity FindEntity(string type) {
-            return this.Entities.FirstOrDefault(m => m.EdmStructuredType.IsTypeOf(type));
+            return Entities.FirstOrDefault(m => m.EdmStructuredType.IsTypeOf(type));
         }
-        public IEnumerable<Flutter.Model> Models => this.Schemas.SelectMany(s => s.Models);
+        public IEnumerable<Model> Models => Schemas.SelectMany(s => s.Models);
         public Model FindModel(string type) {
-            return this.Models.FirstOrDefault(m => m.EdmStructuredType.IsTypeOf(type));
+            return Models.FirstOrDefault(m => m.EdmStructuredType.IsTypeOf(type));
         }
-        public IEnumerable<Flutter.Collection> Collections => this.Schemas.SelectMany(s => s.Collections);
+        public IEnumerable<Collection> Collections => Schemas.SelectMany(s => s.Collections);
         public Collection FindCollection(string type) {
-            return this.Collections.FirstOrDefault(m => m.EdmStructuredType.IsTypeOf(type));
+            return Collections.FirstOrDefault(m => m.EdmStructuredType.IsTypeOf(type));
         }
         public Package(ApiOptions options) : base(options)
         {
-            this.Module = new Module(this, options);
-            Config = new Flutter.ApiConfig(this, options);
-            Index = new Flutter.Index(this, options);
+            Module = new Module(this, options);
+            Config = new ApiConfig(this, options);
+            Index = new Index(this, options);
         }
 
         public override void Build()
         {
             foreach (var schema in Program.Metadata.Schemas)
             {
-                this.Schemas.Add(new Flutter.SchemaConfig(schema, this.Options));
+                Schemas.Add(new SchemaConfig(schema, Options));
             }
         }
         public override void ResolveDependencies()
@@ -50,7 +50,7 @@ namespace ODataApiGen.Flutter
             {
                 if (!String.IsNullOrEmpty(entity.EdmStructuredType.BaseType))
                 {
-                    var baseEntity = this.Entities.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(entity.EdmStructuredType.BaseType));
+                    var baseEntity = Entities.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(entity.EdmStructuredType.BaseType));
                     entity.SetBase(baseEntity);
                     entity.AddDependency(baseEntity);
                 }
@@ -60,11 +60,11 @@ namespace ODataApiGen.Flutter
             {
                 if (!String.IsNullOrEmpty(model.EdmStructuredType.BaseType))
                 {
-                    var baseModel = this.Models.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(model.EdmStructuredType.BaseType));
+                    var baseModel = Models.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(model.EdmStructuredType.BaseType));
                     model.SetBase(baseModel);
                     model.AddDependency(baseModel);
                 }
-                var collection = this.Collections.FirstOrDefault(m => m.EdmStructuredType.Name == model.EdmStructuredType.Name);
+                var collection = Collections.FirstOrDefault(m => m.EdmStructuredType.Name == model.EdmStructuredType.Name);
                 if (collection != null)
                 {
                     model.SetCollection(collection);
@@ -76,7 +76,7 @@ namespace ODataApiGen.Flutter
             {
                 if (!String.IsNullOrEmpty(collection.EdmStructuredType.BaseType))
                 {
-                    var baseCollection = this.Collections.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(collection.EdmStructuredType.BaseType));
+                    var baseCollection = Collections.FirstOrDefault(e => e.EdmStructuredType.IsTypeOf(collection.EdmStructuredType.BaseType));
                     collection.SetBase(baseCollection);
                     collection.AddDependency(baseCollection);
                 }
@@ -87,29 +87,29 @@ namespace ODataApiGen.Flutter
                 schema.ResolveDependencies();
                 foreach (var container in schema.Containers)
                 {
-                    container.ResolveDependencies(this.Enums, this.Entities, this.Models, this.Collections);
+                    container.ResolveDependencies(Enums, Entities, Models, Collections);
                 }
             }
 
             // Resolve Renderable Dependencies
-            foreach (var renderable in this.Renderables)
+            foreach (var renderable in Renderables)
             {
                 var types = renderable.ImportTypes;
                 if (renderable is Enum || renderable is EnumTypeConfig || renderable is Entity || renderable is Model || renderable is Collection || renderable is Service)
                 {
                     renderable.AddDependencies(
-    this.Enums.Where(e => e != renderable && types.Any(type => e.EdmEnumType.IsTypeOf(type))));
+    Enums.Where(e => e != renderable && types.Any(type => e.EdmEnumType.IsTypeOf(type))));
                     if (renderable is Entity || renderable is Model || renderable is Collection || renderable is Service)
                     {
                         renderable.AddDependencies(
-        this.Entities.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
+        Entities.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
                         if (!(renderable is EnumTypeConfig))
                         {
                             {
                                 renderable.AddDependencies(
-                this.Models.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
+                Models.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
                                 renderable.AddDependencies(
-                this.Collections.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
+                Collections.Where(e => e != renderable && types.Any(type => e.EdmStructuredType.IsTypeOf(type))));
                             }
                         }
                     }
@@ -117,27 +117,27 @@ namespace ODataApiGen.Flutter
             }
 
             // Module
-            this.Module.AddDependencies(this.Schemas.SelectMany(s => s.Containers.Select(c => c.Service)));
-            this.Module.AddDependencies(this.Schemas.SelectMany(s => s.Containers.SelectMany(c => c.Services)));
+            Module.AddDependencies(Schemas.SelectMany(s => s.Containers.Select(c => c.Service)));
+            Module.AddDependencies(Schemas.SelectMany(s => s.Containers.SelectMany(c => c.Services)));
             // Config
-            this.Config.AddDependencies(this.Schemas);
+            Config.AddDependencies(Schemas);
             // Index
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Enums));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.EnumConfigs));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Entities));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Models));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Collections));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.EntityConfigs));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Containers.Select(c => c.Service)));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Containers.SelectMany(c => c.Services)));
-            this.Index.AddDependencies(this.Schemas.SelectMany(s => s.Containers.SelectMany(c => c.EntitySetConfigs)));
-            this.Index.AddDependency(this.Config);
-            this.Index.AddDependency(this.Module);
+            Index.AddDependencies(Schemas.SelectMany(s => s.Enums));
+            Index.AddDependencies(Schemas.SelectMany(s => s.EnumConfigs));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Entities));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Models));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Collections));
+            Index.AddDependencies(Schemas.SelectMany(s => s.EntityConfigs));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Containers.Select(c => c.Service)));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Containers.SelectMany(c => c.Services)));
+            Index.AddDependencies(Schemas.SelectMany(s => s.Containers.SelectMany(c => c.EntitySetConfigs)));
+            Index.AddDependency(Config);
+            Index.AddDependency(Module);
         }
 
         public override IEnumerable<string> GetAllDirectories()
         {
-            return this.Schemas.SelectMany(s => s.GetAllDirectories())
+            return Schemas.SelectMany(s => s.GetAllDirectories())
                 .Distinct();
         }
 
@@ -145,11 +145,11 @@ namespace ODataApiGen.Flutter
         {
             return new
             {
-                Name = this.Name,
-                ServiceRootUrl = this.ServiceRootUrl,
-                Version = this.Version,
+                Name,
+                ServiceRootUrl,
+                Version,
                 Creation = DateTime.Now,
-                Schemas = this.Schemas
+                Schemas
             };
         }
 
@@ -158,11 +158,11 @@ namespace ODataApiGen.Flutter
             get
             {
                 var renderables = new List<Renderable>();
-                renderables.Add(this.Module);
-                renderables.Add(this.Config);
-                renderables.Add(this.Index);
-                renderables.AddRange(this.Schemas);
-                renderables.AddRange(this.Schemas.SelectMany(s => s.Renderables));
+                renderables.Add(Module);
+                renderables.Add(Config);
+                renderables.Add(Index);
+                renderables.AddRange(Schemas);
+                renderables.AddRange(Schemas.SelectMany(s => s.Renderables));
                 return renderables;
             }
         }

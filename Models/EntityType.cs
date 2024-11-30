@@ -8,7 +8,7 @@ namespace ODataApiGen.Models
             Keys = element.Descendants()
                     .Where(a => a.Name.LocalName == "Key")
                     .Descendants()
-                    .Select(key => new PropertyRef() {
+                    .Select(key => new PropertyRef {
                         Name = key.Attribute("Name")?.Value,
                         Alias = key.Attribute("Alias")?.Value
                     })
@@ -21,7 +21,7 @@ namespace ODataApiGen.Models
 
         public bool Abstract { get; private set; }
         public bool HasStream { get; private set; }
-        public bool IsCompositeKey { get { return this.Keys.Count() > 1; } }
+        public bool IsCompositeKey { get { return Keys.Count > 1; } }
         public List<PropertyRef> Keys { get; private set; }
         public List<NavigationProperty> NavigationProperties { get; set; }
         public NavigationProperty FindNavigationProperty(string name) {
@@ -37,17 +37,17 @@ namespace ODataApiGen.Models
             throw new Exception($"'{entity.Name}' has not navigation property for {name}");
         }
         public void AddActions(IEnumerable<Action> actions) {
-            Actions = actions.Where(a => a.IsBound && a.BindingParameter != null && this.IsTypeOf(a.BindingParameter.Type));
+            Actions = actions.Where(a => a.IsBound && a.BindingParameter != null && IsTypeOf(a.BindingParameter.Type));
         }
         public void AddFunctions(IEnumerable<Function> functions) {
-            Functions = functions.Where(f => f.IsBound && f.BindingParameter != null && this.IsTypeOf(f.BindingParameter.Type));
+            Functions = functions.Where(f => f.IsBound && f.BindingParameter != null && IsTypeOf(f.BindingParameter.Type));
         }
         public void AddAssociations(IEnumerable<Association> associations) {
-            foreach (var nav in this.NavigationProperties) {
+            foreach (var nav in NavigationProperties) {
                 nav.Association = associations.FirstOrDefault(a => a.NamespaceQualifiedName == nav.Relationship);
             }
         }
-        public IEnumerable<Action> Actions { get; set; } = Enumerable.Empty<Action>();
-        public IEnumerable<Function> Functions { get; set; } = Enumerable.Empty<Function>();
+        public IEnumerable<Action> Actions { get; set; } = [];
+        public IEnumerable<Function> Functions { get; set; } = [];
     }
 }

@@ -12,7 +12,7 @@ namespace ODataApiGen.Angular
     }
 
     public static class Utils {
-        public static char[] TypeScriptInvalidNameChars = new char[] {'-', '(', ')'};
+        public static readonly char[] TypeScriptInvalidNameChars = ['-', '(', ')'];
         public static bool IsValidTypescriptName(string name) {
             return !name.Any(c => TypeScriptInvalidNameChars.Contains(c));
         }
@@ -103,7 +103,7 @@ namespace ODataApiGen.Angular
                 default:
                     {
                         return type.Contains(".") && !type.StartsWith("Edm") ? 
-                            Utils.ToTypescriptName(type.Split('.').Last(a => !String.IsNullOrWhiteSpace(a)), TypeScriptElement.Class) : 
+                            ToTypescriptName(type.Split('.').Last(a => !String.IsNullOrWhiteSpace(a)), TypeScriptElement.Class) : 
                             "any";
                     }
             }

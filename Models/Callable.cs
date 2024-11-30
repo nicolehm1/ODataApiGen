@@ -8,14 +8,14 @@ namespace ODataApiGen.Models
         public Schema Schema {get; private set;}
         public Callable(XElement xElement, Schema schema)
         {
-            this.Schema = schema;
+            Schema = schema;
             Name = xElement.Attribute("Name")?.Value;
             IsBound = xElement.Attribute("IsBound")?.Value == "true";
             IsComposable = xElement.Attribute("IsComposable")?.Value == "true";
             EntitySetPath = xElement.Attribute("EntitySetPath")?.Value;
 
             Parameters = xElement.Descendants().Where(a => a.Name.LocalName == "Parameter")
-                .Select(paramElement => new Parameter(paramElement, this)).ToList();
+                .Select(paramElement => new Parameter(paramElement)).ToList();
 
             ReturnType = xElement.Descendants().SingleOrDefault(a => a.Name.LocalName == "ReturnType")?.Attribute("Type")?.Value;
             if (!string.IsNullOrWhiteSpace(ReturnType) && ReturnType.StartsWith("Collection("))
@@ -36,23 +36,23 @@ namespace ODataApiGen.Models
             */
         }
         public string Name { get; }
-        public string NamespaceQualifiedName => $"{this.Namespace}.{this.Name}";
-        public string AliasQualifiedName => $"{this.Alias}.{this.Name}";
-        public string Namespace => this.Schema.Namespace; 
-        public string Alias => this.Schema.Alias; 
+        public string NamespaceQualifiedName => $"{Namespace}.{Name}";
+        public string AliasQualifiedName => $"{Alias}.{Name}";
+        public string Namespace => Schema.Namespace; 
+        public string Alias => Schema.Alias; 
         public string Type { get; protected set; }
         public string ReturnType { get; }
-        public bool IsEdmReturnType => !System.String.IsNullOrWhiteSpace(ReturnType) && ReturnType.StartsWith("Edm.");
-        public EnumType EnumReturnType => Program.Metadata.FindEnumType(this.ReturnType);
-        public bool IsEnumReturnType => this.EnumReturnType != null;
-        public ComplexType ComplexReturnType => Program.Metadata.FindComplexType(this.ReturnType);
-        public bool IsComplexReturnType => this.ComplexReturnType != null;
-        public EntityType EntityReturnType => Program.Metadata.FindEntityType(this.ReturnType);
-        public bool IsEntityReturnType => this.EntityReturnType != null;
-        public Parameter BindingParameter => this.Parameters.FirstOrDefault(p => p.Name == "bindingParameter");
+        public bool IsEdmReturnType => !String.IsNullOrWhiteSpace(ReturnType) && ReturnType.StartsWith("Edm.");
+        public EnumType EnumReturnType => Program.Metadata.FindEnumType(ReturnType);
+        public bool IsEnumReturnType => EnumReturnType != null;
+        public ComplexType ComplexReturnType => Program.Metadata.FindComplexType(ReturnType);
+        public bool IsComplexReturnType => ComplexReturnType != null;
+        public EntityType EntityReturnType => Program.Metadata.FindEntityType(ReturnType);
+        public bool IsEntityReturnType => EntityReturnType != null;
+        public Parameter BindingParameter => Parameters.FirstOrDefault(p => p.Name == "bindingParameter");
         public IEnumerable<Parameter> Parameters { get; }
         public string EntitySetPath { get; }
-        public bool IsCollection => this.BindingParameter != null ? this.BindingParameter.IsCollection : false;
+        public bool IsCollection => BindingParameter != null ? BindingParameter.IsCollection : false;
         public bool IsBound { get; }
         public bool IsComposable { get; }
         public bool ReturnsCollection { get; }
@@ -60,8 +60,8 @@ namespace ODataApiGen.Models
         {
             return new
             {
-                this.Name,
-                this.NamespaceQualifiedName
+                Name,
+                NamespaceQualifiedName
             };
         }
     }

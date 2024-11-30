@@ -43,7 +43,7 @@ static class XElementExtensions
             // If we've seen it once, replace with a list
             if (!(result[nodeName] is List<dynamic>))
             {
-                result[nodeName] = new List<dynamic>() { result[nodeName] };
+                result[nodeName] = new List<dynamic> { result[nodeName] };
             }
                 
             (result[nodeName] as List<dynamic>).Add(node);

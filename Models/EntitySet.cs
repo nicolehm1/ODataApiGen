@@ -8,9 +8,9 @@ namespace ODataApiGen.Models
         public EntityContainer EntityContainer {get; private set;}
         public EntitySet(XElement element, EntityContainer container) : base(element)
         {
-            this.EntityContainer = container;
+            EntityContainer = container;
             Name = element.Attribute("Name")?.Value;
-            this.EntityType = element.Attribute("EntityType")?.Value;
+            EntityType = element.Attribute("EntityType")?.Value;
 
             NavigationPropertyBindings = element.Descendants().ToList().Where(a => a.Name.LocalName == "NavigationPropertyBinding")
                 .Select(navPropBind => new NavigationPropertyBinding(navPropBind, this));
@@ -29,10 +29,10 @@ namespace ODataApiGen.Models
                 .Where(f => f != null);
         }
         public string Name { get; private set; }
-        public string Namespace => this.EntityContainer.Namespace; 
-        public string Alias => this.EntityContainer.Alias; 
-        public string NamespaceQualifiedName => $"{this.Namespace}.{this.Name}";
-        public string AliasQualifiedName => $"{this.Alias}.{this.Name}";
+        public string Namespace => EntityContainer.Namespace; 
+        public string Alias => EntityContainer.Alias; 
+        public string NamespaceQualifiedName => $"{Namespace}.{Name}";
+        public string AliasQualifiedName => $"{Alias}.{Name}";
         public string EntityType { get; private set; }
         public IEnumerable<Action> Actions { get; set; }
         public IEnumerable<Function> Functions { get; set; }
@@ -41,8 +41,8 @@ namespace ODataApiGen.Models
         {
             return new
             {
-                this.Name,
-                this.NamespaceQualifiedName
+                Name,
+                NamespaceQualifiedName
             };
         }
     }

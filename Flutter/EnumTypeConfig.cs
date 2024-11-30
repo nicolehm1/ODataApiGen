@@ -1,17 +1,18 @@
-using ODataApiGen.Abstracts;
-using DotLiquid;
 using System.Text.Json;
+using DotLiquid;
+using ODataApiGen.Abstracts;
+using ODataApiGen.Models;
 
 namespace ODataApiGen.Flutter
 {
     public class EnumMemberConfig : ILiquidizable
   {
-    protected Models.EnumMember Value { get; set; }
-    protected Flutter.EnumTypeConfig Config { get; set; }
-    public EnumMemberConfig(Models.EnumMember member, Flutter.EnumTypeConfig config)
+    protected EnumMember Value { get; set; }
+    protected EnumTypeConfig Config { get; set; }
+    public EnumMemberConfig(EnumMember member, EnumTypeConfig config)
     {
-      this.Value = member;
-      this.Config = config;
+      Value = member;
+      Config = config;
     }
     public string Name => Utils.IsValidTypeScrtiptName(Value.Name) ? Value.Name : $"\"{Value.Name}\"";
 
@@ -20,10 +21,10 @@ namespace ODataApiGen.Flutter
       get
       {
         var values = new Dictionary<string, string>();
-        values.Add("value", $"{this.Value.Value}");
-        if (this.Name != this.Value.Name)
-          values.Add("name", $"'{this.Value.Name}'");
-        var annots = this.Value.Annotations;
+        values.Add("value", $"{Value.Value}");
+        if (Name != Value.Name)
+          values.Add("name", $"'{Value.Name}'");
+        var annots = Value.Annotations;
         if (annots.Count > 0)
         {
           var json = JsonSerializer.Serialize(annots.Select(annot => annot.ToDictionary()));
@@ -36,46 +37,46 @@ namespace ODataApiGen.Flutter
     {
       return new
       {
-          this.Name,
-          this.Type
+          Name,
+          Type
       };
     }
   }
-  public class EnumTypeConfig : FlutterRenderable, DotLiquid.ILiquidizable
+  public class EnumTypeConfig : FlutterRenderable, ILiquidizable
   {
-    public Flutter.Enum Enum { get; private set; }
-    public EnumTypeConfig(Flutter.Enum enu, ApiOptions options) : base(options)
+    public Enum Enum { get; private set; }
+    public EnumTypeConfig(Enum enu, ApiOptions options) : base(options)
     {
-      this.Enum = enu;
+      Enum = enu;
     }
-    public override string FileName => this.Enum.FileName + ".config";
-    public override string Name => this.Enum.Name + "Config";
-    public string EnumType => this.Enum.EdmEnumType.NamespaceQualifiedName;
-    public string EdmEnumName => this.Enum.EdmEnumType.Name;
-    public string EnumName => this.Enum.Name;
+    public override string FileName => Enum.FileName + ".config";
+    public override string Name => Enum.Name + "Config";
+    public string EnumType => Enum.EdmEnumType.NamespaceQualifiedName;
+    public string EdmEnumName => Enum.EdmEnumType.Name;
+    public string EnumName => Enum.Name;
 
-    public bool HasAnnotations => this.Enum.EdmEnumType.Annotations.Count() > 0;
-    public string Annotations => JsonSerializer.Serialize(this.Enum.EdmEnumType.Annotations.Select(annot => annot.ToDictionary()), new JsonSerializerOptions() { WriteIndented = true });
-    public IEnumerable<Flutter.EnumMemberConfig> Members
+    public bool HasAnnotations => Enum.EdmEnumType.Annotations.Count > 0;
+    public string Annotations => JsonSerializer.Serialize(Enum.EdmEnumType.Annotations.Select(annot => annot.ToDictionary()), new JsonSerializerOptions { WriteIndented = true });
+    public IEnumerable<EnumMemberConfig> Members
     {
       get
       {
-        return this.Enum.EdmEnumType.Members.Select(member => new EnumMemberConfig(member, this));
+        return Enum.EdmEnumType.Members.Select(member => new EnumMemberConfig(member, this));
       }
     }
 
     // Imports
-    public override IEnumerable<string> ImportTypes => new List<string> { this.EnumType };
+    public override IEnumerable<string> ImportTypes => new List<string> { EnumType };
     public override IEnumerable<Import> Imports => GetImportRecords();
-    public override string Directory => this.Enum.EdmEnumType.Namespace.Replace('.', Path.DirectorySeparatorChar);
-    public bool Flags => this.Enum.EdmEnumType.Flags;
+    public override string Directory => Enum.EdmEnumType.Namespace.Replace('.', Path.DirectorySeparatorChar);
+    public bool Flags => Enum.EdmEnumType.Flags;
 
     public object ToLiquid()
     {
       return new
       {
-        Name = this.ImportedName,
-        this.EnumName
+        Name = ImportedName,
+        EnumName
       };
     }
   }

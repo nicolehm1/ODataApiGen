@@ -1,28 +1,28 @@
 using DotLiquid;
 using ODataApiGen.Abstracts;
+using ODataApiGen.Models;
 
 namespace ODataApiGen.Flutter
 {
     public class Enum : FlutterRenderable, ILiquidizable {
-        public Models.EnumType EdmEnumType {get; private set;}
-        public Enum(Models.EnumType type, ApiOptions options) : base(options) {
+        public EnumType EdmEnumType {get; private set;}
+        public Enum(EnumType type, ApiOptions options) : base(options) {
             EdmEnumType = type;
         }
         // Imports
-        public override IEnumerable<string> ImportTypes => Enumerable.Empty<string>();
+        public override IEnumerable<string> ImportTypes => [];
         // Exports
         public override IEnumerable<Import> Imports => GetImportRecords();
-        public override string Name => Utils.ToDartName(this.EdmEnumType.Name, DartElement.Enum);
-        public string EnumType => this.EdmEnumType.NamespaceQualifiedName;
-        public override string FileName => this.EdmEnumType.Name.Dasherize() + ".enum";
-        public override string Directory => this.EdmEnumType.Namespace.Replace('.', Path.DirectorySeparatorChar);
-        public IEnumerable<string> Members => this.EdmEnumType.Members.Select(m => $"{m.Name} = {m.Value}");
-        public bool Flags => this.EdmEnumType.Flags;
+        public override string Name => Utils.ToDartName(EdmEnumType.Name, DartElement.Enum);
+        public string EnumType => EdmEnumType.NamespaceQualifiedName;
+        public override string FileName => EdmEnumType.Name.Dasherize() + ".enum";
+        public override string Directory => EdmEnumType.Namespace.Replace('.', Path.DirectorySeparatorChar);
+        public IEnumerable<string> Members => EdmEnumType.Members.Select(m => $"{m.Name} = {m.Value}");
+        public bool Flags => EdmEnumType.Flags;
         public object ToLiquid()
         {
             return new { 
-                Name = this.ImportedName,
-                EnumType = this.EnumType
+                Name = ImportedName, EnumType
             };
         }
     }

@@ -7,7 +7,7 @@ namespace ODataApiGen.Models
         public AssociationSet AssociationSet {get; private set;}
         public AssociationSetEnd(XElement xElement, AssociationSet set)
         {
-            this.AssociationSet = set;
+            AssociationSet = set;
             Role = xElement.Attribute("Role").Value;
             EntitySet = xElement.Attribute("EntitySet").Value;
         }

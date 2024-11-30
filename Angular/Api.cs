@@ -1,58 +1,60 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using ODataApiGen.Abstracts;
+using ODataApiGen.Models;
+using Action = ODataApiGen.Models.Action;
 
 namespace ODataApiGen.Angular
 {
     public class Api : AngularRenderable
     {
-        public Angular.Package Package { get; private set; }
+        public Package Package { get; private set; }
         public Api(Package package, ApiOptions options) : base(options)
         {
-            this.Package = package;
+            Package = package;
         }
         // Imports
         public override IEnumerable<string> ImportTypes => Package.Schemas.SelectMany(m => m.ImportTypes);
         // Exports
         public override IEnumerable<Import> Imports => GetImportRecords();
-        public override string Name => this.Package.Name + "Api";
+        public override string Name => Package.Name + "Api";
         // About File
-        public override string FileName => this.Package.Name.Dasherize() + ".api";
+        public override string FileName => Package.Name.Dasherize() + ".api";
         public override string Directory => "";
         public IEnumerable<EnumTypeConfig> EnumTypeConfigs { get; set; }
         public IEnumerable<StructuredTypeConfig> StructuredTypeConfigs { get; set; }
         public IEnumerable<EntitySetConfig> EntitySetConfigs { get; set; }
         public IEnumerable<SingletonConfig> SingletonConfigs { get; set; }
         public IEnumerable<CallableConfig> CallableConfigs { get; set; }
-        public IEnumerable<Models.EnumType> EnumTypes => this.EnumTypeConfigs.Select(e => e.Enum.EdmEnumType);
-        public IEnumerable<Models.ComplexType> ComplexTypes => this.StructuredTypeConfigs.Select(e => e.Entity.EdmStructuredType).OfType<Models.ComplexType>();
-        public IEnumerable<Models.EntityType> EntityTypes => this.StructuredTypeConfigs.Select(e => e.Entity.EdmStructuredType).OfType<Models.EntityType>();
-        public IEnumerable<Models.EntitySet> EntitySets => this.EntitySetConfigs.Select(s => s.Service.EdmEntitySet);
-        public IEnumerable<Models.Singleton> Singletons => this.SingletonConfigs.Select(s => s.Service.EdmSingleton);
-        public IEnumerable<Models.Function> Functions => this.CallableConfigs.Select(e => e.Callable).OfType<Models.Function>();
-        public IEnumerable<Models.Action> Actions => this.CallableConfigs.Select(e => e.Callable).OfType<Models.Action>();
+        public IEnumerable<EnumType> EnumTypes => EnumTypeConfigs.Select(e => e.Enum.EdmEnumType);
+        public IEnumerable<ComplexType> ComplexTypes => StructuredTypeConfigs.Select(e => e.Entity.EdmStructuredType).OfType<ComplexType>();
+        public IEnumerable<EntityType> EntityTypes => StructuredTypeConfigs.Select(e => e.Entity.EdmStructuredType).OfType<EntityType>();
+        public IEnumerable<EntitySet> EntitySets => EntitySetConfigs.Select(s => s.Service.EdmEntitySet);
+        public IEnumerable<Singleton> Singletons => SingletonConfigs.Select(s => s.Service.EdmSingleton);
+        public IEnumerable<Function> Functions => CallableConfigs.Select(e => e.Callable).OfType<Function>();
+        public IEnumerable<Action> Actions => CallableConfigs.Select(e => e.Callable).OfType<Action>();
         public string Typescript
         {
             get
             {
                 var useStrings = true;
                 var root = new Dictionary<string, object>();
-                var elements = this.EnumTypes.Select(
+                var elements = EnumTypes.Select(
                     e => new { typ = "EnumType", e.Name, e.Alias, e.Namespace, e.NamespaceQualifiedName, e.AliasQualifiedName }
                 ).Union(
-                    this.EntityTypes.Select(
+                    EntityTypes.Select(
                     e => new { typ = "EntityType", e.Name, e.Alias, e.Namespace, e.NamespaceQualifiedName, e.AliasQualifiedName })
                 ).Union(
-                    this.ComplexTypes.Select(
+                    ComplexTypes.Select(
                     e => new { typ = "ComplexType", e.Name, e.Alias, e.Namespace, e.NamespaceQualifiedName, e.AliasQualifiedName })
                 ).Union(
-                    this.EntitySets.Select(
+                    EntitySets.Select(
                     e => new { typ = "EntitySet", e.Name, e.Alias, e.Namespace, e.NamespaceQualifiedName, e.AliasQualifiedName })
                 ).Union(
-                    this.Functions.Select(
+                    Functions.Select(
                     e => new { typ = "Function", e.Name, e.Alias, e.Namespace, e.NamespaceQualifiedName, e.AliasQualifiedName })
                 ).Union(
-                    this.Actions.Select(
+                    Actions.Select(
                     e => new { typ = "Action", e.Name, e.Alias, e.Namespace, e.NamespaceQualifiedName, e.AliasQualifiedName })
                 );
                 foreach (var element in elements)
@@ -64,7 +66,7 @@ namespace ODataApiGen.Angular
                         {
                             current.Add(chunk, new Dictionary<string, object>());
                         }
-                        current = current[chunk] as Dictionary<string, object>;
+                        current = (Dictionary<string, object>) current[chunk];
                     }
                     if (!current.ContainsKey(element.Name))
                     {
@@ -85,7 +87,7 @@ namespace ODataApiGen.Angular
                         }
                     }
                 }
-                var jsonText = JsonSerializer.Serialize(root, new JsonSerializerOptions() { WriteIndented = true });
+                var jsonText = JsonSerializer.Serialize(root, new JsonSerializerOptions { WriteIndented = true });
                 string regexPattern = "\"([^\"]+)\":"; // the "propertyName": pattern
                 return Regex.Replace(jsonText, regexPattern, "$1:");
             }

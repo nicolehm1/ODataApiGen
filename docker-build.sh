@@ -2,8 +2,8 @@
 
 set -ex
 
-IMAGE_NAME="diegomvh/odataapigen"
-TAG="${1}"
+IMAGE_NAME="nicolehm1/odataapigen"
+TAG=arm
 
 REGISTRY="docker.io"
 

@@ -7,17 +7,17 @@ namespace ODataApiGen.Models
         public EntityContainer EntityContainer {get; private set;}
         public AssociationSet(XElement element, EntityContainer container) : base(element)
         {
-            this.EntityContainer = container;
+            EntityContainer = container;
             Name = element.Attribute("Name")?.Value;
-            this.Association = element.Attribute("Association")?.Value;
+            Association = element.Attribute("Association")?.Value;
 
             AssociationSetEnds = element.Descendants().ToList().Where(a => a.Name.LocalName == "End")
                 .Select(end => new AssociationSetEnd(end, this));
         }
 
         public string Name { get; private set; }
-        public string Namespace => this.EntityContainer.Namespace; 
-        public string NamespaceQualifiedName => $"{this.Namespace}.{this.Name}";
+        public string Namespace => EntityContainer.Namespace; 
+        public string NamespaceQualifiedName => $"{Namespace}.{Name}";
         public string Association { get; private set; }
         public IEnumerable<AssociationSetEnd> AssociationSetEnds { get; set; }
     }
